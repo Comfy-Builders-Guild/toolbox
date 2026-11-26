@@ -186,7 +186,8 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     { name: 'Other', fields: [], cmd: '' }
   ];
   var FIELD = {
-    client: { label: 'Client (who it\'s for)', kind: 'text', ph: '@PlayerName' },
+    client: { label: 'Client\'s Discord ID', kind: 'text', ph: '123456789012345678',
+      help: 'In Discord, right-click the player\'s name and pick Copy User ID (turn on Developer Mode under Settings > Advanced if you don\'t see it). The command adds the <@ > for you so it tags them.' },
     specialty: { label: 'Specialty', kind: 'list', list: SPECIALTIES, ph: 'Start typing to search' },
     activity: { label: 'Builder Activity', kind: 'select', list: ACTIVITIES },
     quest: { label: 'Quest', kind: 'select', list: QUESTS },
@@ -236,10 +237,16 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     [10, 15, 20, 25, 30, 60].forEach(function (h) { o.push('<option value="' + h + '">' + h + '+ hours</option>'); });
     return o.join('');
   }
+  // A bare Discord ID (or one typed as @ID or <@ID>) becomes <@ID> so the bot tags the right player. Anything else stays as typed.
+  function mention(v) {
+    v = String(v || '').trim();
+    var m = v.match(/^<?@?!?(\d{15,21})>?$/);
+    return m ? '<@' + m[1] + '>' : v;
+  }
   function extraOf(p) { var t = typeOf(p); var k = t.fields.filter(function (f) { return f !== 'client' && f !== 'specialty'; })[0]; return k ? (p.fields[k] || '') : ''; }
   function command(p) {
     var t = typeOf(p); if (!t.cmd) return null;
-    var vals = { CLIENT: p.fields.client || '', SPECIALTY: p.fields.specialty || '', EXTRA: extraOf(p), HOURS: durChoice(sum(open(p.id))), NAME: p.name };
+    var vals = { CLIENT: mention(p.fields.client), SPECIALTY: p.fields.specialty || '', EXTRA: extraOf(p), HOURS: durChoice(sum(open(p.id))), NAME: p.name };
     var missing = t.fields.filter(function (f) { return !p.fields[f]; }).map(function (f) { return FIELD[f].label.replace(/ \(.*\)$/, ''); });
     var re = /\{(CLIENT|SPECIALTY|EXTRA|HOURS|NAME)\}/g;
     return { text: t.cmd.replace(re, function (_, k) { return vals[k]; }),
@@ -294,7 +301,8 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
         f.list.map(function (o) { return '<option' + (o === values[k] ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>';
       var dl = f.kind === 'list' ? ' list="dl-' + k + '"' : '';
       var opts = f.kind === 'list' ? '<datalist id="dl-' + k + '">' + f.list.map(function (o) { return '<option value="' + esc(o) + '">'; }).join('') + '</datalist>' : '';
-      return '<div class="field"><label for="' + id + '">' + f.label + '</label><input id="' + id + '" type="text" maxlength="80" value="' + esc(values[k] || '') + '" placeholder="' + esc(f.ph || '') + '"' + dl + '>' + opts + '</div>';
+      return '<div class="field"><label for="' + id + '">' + f.label + '</label><input id="' + id + '" type="text" maxlength="80" value="' + esc(values[k] || '') + '" placeholder="' + esc(f.ph || '') + '"' + dl + (f.help ? ' aria-describedby="' + id + '-h"' : '') + '>' + opts +
+        (f.help ? '<p class="small muted" id="' + id + '-h" style="margin:6px 0 0">' + esc(f.help) + '</p>' : '') + '</div>';
     }).join('');
     if (t.note) html += '<p class="note" style="margin:0">' + esc(t.note) + '</p>';
     $('f-extra').innerHTML = html ? '<div class="fields">' + html + '</div>' : '';
@@ -538,7 +546,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     } else {
       var t = typeOf(p), list = open(p.id), mins = sum(list), run = r && r.pid === p.id, c = command(p);
       var chips = '<span class="chip type">' + esc(t.name) + '</span>';
-      t.fields.forEach(function (k) { if (p.fields[k]) chips += '<span class="chip">' + esc(p.fields[k]) + '</span>'; });
+      t.fields.forEach(function (k) { if (p.fields[k]) chips += '<span class="chip">' + esc(k === 'client' ? mention(p.fields[k]) : p.fields[k]) + '</span>'; });
       var html = '<div class="bench">';
       // head
       html += '<div class="card wide"><div class="head"><div style="min-width:0"><h2 class="pname">' + esc(p.name) + '</h2><div class="chips">' + chips + '</div></div>' +
