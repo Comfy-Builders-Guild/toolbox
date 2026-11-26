@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="style.css">
+<script src="pieces-data.js"></script>
 <style>
 /* Layout: project list on the left, the picked project's workbench on the right; stacks on phones */
 main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -54,6 +55,24 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
 .slot p { margin: 6px 0 0; color: var(--soft); font-size: 14px; }
 .meter { height: 10px; border-radius: 999px; background: var(--code); border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
 .meter i { display: block; height: 100%; width: 0; background: var(--frost); }
+.pick { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; }
+@media (max-width: 560px) { .pick { grid-template-columns: 1fr 1fr; } .pick #pc-q { grid-column: 1 / -1; } }
+.res { display: grid; gap: 4px; margin-top: 8px; max-height: 280px; overflow-y: auto; }
+.res button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; text-align: left; font-weight: 600; padding: 7px 10px; background: var(--code); }
+.res button span { color: var(--soft); font-weight: 500; font-size: 12px; }
+.res button small { grid-column: 1 / -1; color: var(--soft); font-weight: 500; font-size: 12px; }
+.prow { display: grid; grid-template-columns: minmax(0, 1fr) 76px auto; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.prow:first-child { border-top: 0; }
+.prow input { padding: 5px 8px; text-align: center; font-variant-numeric: tabular-nums; }
+.prow small { display: block; color: var(--soft); font-size: 12px; }
+.mats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 14px; margin-top: 8px; }
+.mats div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 6px; background: var(--code); font-size: 14px; }
+.mats b { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.big { font-family: var(--f-mono); font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.meter i.warn { background: var(--warn); } .meter i.over { background: var(--stop); }
+.crow { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 5px 0; border-top: 1px solid var(--line); }
+.crow:first-child { border-top: 0; }
+.okc { color: var(--ok); font-weight: 700; } .badc { color: var(--stop); font-weight: 700; }
 .empty { text-align: center; padding: 40px 16px; color: var(--soft); }
 .empty strong { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
 .hist-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: 14px; padding: 8px 0; border-top: 1px solid var(--line); }
@@ -123,7 +142,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     <section id="detail" aria-live="polite"></section>
   </div>
 </main>
-<footer class="wrap site">Saved on this device only. Durations match the bot's choices: quarter hours up to 5, whole hours 6 to 9, then 10+, 15+, 20+, 25+, 30+ and 60+.</footer>
+<footer class="wrap site">Saved on this device only. Durations match the bot's choices: quarter hours up to 5, whole hours 6 to 9, then 10+, 15+, 20+, 25+, 30+ and 60+. Piece costs and comfort come from kirilloid's Valheim database and the Pottery Barn mod.</footer>
 <div id="toast" class="toast" hidden role="status"></div>
 
 <script>
@@ -399,6 +418,93 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     } catch (e) { toast('That doesn\'t look like a toolbox backup.'); }
   }
 
+  // ---------- materials, instances, comfort ----------
+  var DATA = window.TB_DATA || { pieces: [], items: {} };
+  var BYID = {}; DATA.pieces.forEach(function (x) { BYID[x.id] = x; });
+  var CATS = []; DATA.pieces.forEach(function (x) { if (CATS.indexOf(x.c) === -1) CATS.push(x.c); }); CATS.sort(az);
+  var GROUPS = { bed: 'Bed', chair: 'Seat', table: 'Table', fire: 'Fire', banner: 'Banner', carpet: 'Rug' };
+  function itemName(i) { return DATA.items[i] || i; }
+  var ALIAS = { 'Fire pit': 'campfire', 'Stool': 'chair seat', 'Hot tub': 'bathtub' };   // extra search words
+  function piecesOf(p) { return p.pieces || (p.pieces = {}); }
+  function drawResults() {
+    var q = ($('pc-q') || {}).value, box = $('pc-res'); if (!box) return;
+    q = (q || '').trim().toLowerCase();
+    var cat = $('pc-cat').value, src = $('pc-src').value;
+    if (!q && !cat && !src) { box.innerHTML = ''; return; }
+    var words = q.split(/\s+/).filter(String);
+    var hits = DATA.pieces.filter(function (x) {
+      if (cat && x.c !== cat) return false; if (src && x.src !== src) return false;
+      var hay = (x.n + ' ' + x.c + ' ' + x.src + ' ' + (ALIAS[x.n] || '')).toLowerCase();
+      return words.every(function (w) { return hay.indexOf(w) !== -1; });
+    });
+    // best matches first: exact name, then names that start with the search, then the rest (A to Z within each)
+    var rank = function (x) { var n = x.n.toLowerCase(); return !q ? 3 : n === q ? 0 : n.indexOf(q) === 0 ? 1 : (' ' + n).indexOf(' ' + words[0]) !== -1 ? 2 : 3; };
+    hits = hits.sort(function (a, b) { return (rank(a) - rank(b)) || az(a.n, b.n); }).slice(0, 40);
+    box.innerHTML = hits.length ? hits.map(function (x) {
+      var cost = Object.keys(x.m).sort(function (a, b) { return az(itemName(a), itemName(b)); }).map(function (i) { return itemName(i) + ' ' + x.m[i]; }).join(', ');
+      return '<button type="button" data-add="' + esc(x.id) + '">' + esc(x.n) + '<span>' + esc(x.src === 'Vanilla' ? x.c : x.src) + ' · +1</span><small>' + esc(cost) + '</small></button>';
+    }).join('') : '<p class="small muted" style="margin:4px 0">No pieces match.</p>';
+  }
+  function drawPieces(p) {
+    var P = piecesOf(p), ids = Object.keys(P).filter(function (id) { return BYID[id] && P[id] > 0; }).sort(function (a, b) { return az(BYID[a].n, BYID[b].n); });
+    var total = 0, mats = {};
+    ids.forEach(function (id) { var x = BYID[id], q = P[id]; total += q; Object.keys(x.m).forEach(function (i) { mats[i] = (mats[i] || 0) + x.m[i] * q; }); });
+    $('pc-list').innerHTML = ids.length ? '<label>Pieces you plan to place</label>' + ids.map(function (id) {
+      var x = BYID[id];
+      return '<div class="prow"><span>' + esc(x.n) + '<small>' + esc((x.src === 'Vanilla' ? '' : x.src + ' · ') + (x.st === 'None' ? 'No station needed' : x.st)) + '</small></span>' +
+        '<input type="number" min="0" step="1" inputmode="numeric" value="' + P[id] + '" data-qty="' + esc(id) + '" aria-label="How many ' + esc(x.n) + '">' +
+        '<button type="button" class="ghost danger" data-rm="' + esc(id) + '" aria-label="Remove ' + esc(x.n) + '">✕</button></div>';
+    }).join('') : '<p class="small muted" style="margin:0">Search for a piece above and tap it to add it. Tap again to add more.</p>';
+    var mk = Object.keys(mats).sort(function (a, b) { return az(itemName(a), itemName(b)); });
+    $('pc-tot').innerHTML = mk.length ? '<div class="head" style="margin-top:16px"><label style="margin:0">Total materials</label>' +
+      '<div class="btns"><button type="button" data-act="copymats">Copy list</button><button type="button" class="ghost danger" data-act="clearmats">Clear pieces</button></div></div>' +
+      '<div class="mats">' + mk.map(function (i) { return '<div><span>' + esc(itemName(i)) + '</span><b>' + mats[i].toLocaleString() + '</b></div>'; }).join('') + '</div>' : '';
+
+    // instances
+    var t = typeOf(p), lim = t.limit || 0;
+    var pct = lim ? Math.min(100, total / lim * 100) : 0, cls = !lim ? '' : total > lim ? 'over' : total > lim * 0.85 ? 'warn' : '';
+    $('ins').innerHTML = '<h2>Instances</h2><div class="total"><span class="big">' + total.toLocaleString() + '</span><span class="muted">' + (lim ? 'of ' + lim.toLocaleString() + ' allowed' : 'pieces planned') + '</span></div>' +
+      (lim ? '<div class="meter"><i class="' + cls + '" style="width:' + pct + '%"></i></div>' +
+        (total > lim ? '<p class="note" style="color:var(--stop)">That\'s over the limit by ' + (total - lim).toLocaleString() + '.</p>' : total > lim * 0.85 ? '<p class="note">Getting close to the limit.</p>' : '') : '') +
+      '<p class="small muted" style="margin:10px 0 0">Each piece you place is about 1 instance. Trees, rocks and other things already in the area count too, so check in game with ZoneScouter before you finish.</p>';
+
+    // comfort: best piece in each group, plus each different piece with no group, plus 2 for being under a roof
+    var best = {}, solo = [];
+    ids.forEach(function (id) { var x = BYID[id]; if (!x.cf) return; if (x.g) { if (!best[x.g] || x.cf > best[x.g].cf) best[x.g] = x; } else solo.push(x); });
+    var rows = Object.keys(best).sort(function (a, b) { return az(GROUPS[a] || a, GROUPS[b] || b); }).map(function (g) { return [(GROUPS[g] || g) + ': ' + best[g].n, best[g].cf]; })
+      .concat(solo.sort(function (a, b) { return az(a.n, b.n); }).map(function (x) { return [x.n, x.cf]; }));
+    var cTot = 2 + rows.reduce(function (a, r) { return a + r[1]; }, 0), need = t.comfort || 0;
+    $('cmf').innerHTML = '<h2>Comfort</h2><div class="total"><span class="big">' + cTot + '</span><span class="muted">comfort level' + (need ? ' · needs ' + need : '') + '</span>' +
+      (need ? (cTot >= need ? '<span class="okc">✔ Enough</span>' : '<span class="badc">' + (need - cTot) + ' short</span>') : '') + '</div>' +
+      '<div style="margin-top:10px">' + [['Under a roof (shelter)', 2]].concat(rows).map(function (r) { return '<div class="crow"><span>' + esc(r[0]) + '</span><b>+' + r[1] + '</b></div>'; }).join('') + '</div>' +
+      (best.fire ? '' : '<p class="note">Add a fire. You need one nearby to rest.</p>') +
+      '<p class="small muted" style="margin:10px 0 0">Only the best piece in each group counts (one bed, one seat, one table and so on). Pieces need to be close together. Double check in game with Hygge.</p>';
+  }
+  $('detail').addEventListener('input', function (e) {
+    if (e.target.id === 'pc-q') drawResults();
+  });
+  $('detail').addEventListener('change', function (e) {
+    var p = proj(sel); if (!p) return;
+    if (e.target.id === 'pc-cat' || e.target.id === 'pc-src') { drawResults(); return; }
+    var id = e.target.dataset && e.target.dataset.qty; if (!id) return;
+    var q = Math.max(0, Math.floor(Number(e.target.value) || 0));
+    if (q) piecesOf(p)[id] = q; else delete piecesOf(p)[id];
+    save(); drawPieces(p);
+  });
+  $('detail').addEventListener('click', function (e) {
+    var p = proj(sel); if (!p) return;
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.add) { var P = piecesOf(p); P[b.dataset.add] = (P[b.dataset.add] || 0) + 1; save(); drawPieces(p); toast(BYID[b.dataset.add].n + ': ' + P[b.dataset.add]); }
+    else if (b.dataset.rm) { delete piecesOf(p)[b.dataset.rm]; save(); drawPieces(p); }
+    else if (b.dataset.act === 'clearmats') { if (b.dataset.sure) { p.pieces = {}; save(); drawPieces(p); toast('Pieces cleared'); } else { b.dataset.sure = '1'; b.textContent = 'Tap again to clear'; } }
+    else if (b.dataset.act === 'copymats') {
+      var P2 = piecesOf(p), mats = {};
+      Object.keys(P2).forEach(function (id) { var x = BYID[id]; if (!x) return; Object.keys(x.m).forEach(function (i) { mats[i] = (mats[i] || 0) + x.m[i] * P2[id]; }); });
+      var text = '**Materials for ' + p.name + '**\n' + Object.keys(mats).sort(function (a, c) { return az(itemName(a), itemName(c)); }).map(function (i) { return '- ' + itemName(i) + ': ' + mats[i].toLocaleString(); }).join('\n');
+      copy(text, 'Materials list copied');
+    }
+  });
+
   // ---------- render ----------
   function render(keepSessionsOpen) {
     var last = {}; S.sessions.forEach(function (s) { last[s.pid] = Math.max(last[s.pid] || 0, s.end); });
@@ -469,15 +575,16 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
         }).join('');
         html += '<section class="card wide"><details data-k="sess"' + (wasOpen ? ' open' : '') + '><summary>Sessions (' + list.length + ')</summary><div class="sess">' + sess + '</div></details></section>';
       }
-      // coming next
-      html += '<section class="card slot"><h2>Materials <span class="soon">Coming soon</span></h2><p>Add the pieces you plan to place and get the total wood, stone, metal and everything else you need.</p></section>';
-      html += '<section class="card slot"><h2>Instances <span class="soon">Coming soon</span></h2><p>' +
-        (t.limit ? 'This type has a limit of <b>' + t.limit.toLocaleString() + '</b> instances. Your piece list will show how close you are.</p><div class="meter" aria-hidden="true"><i></i></div>'
-                 : 'Your piece list will add up roughly how many instances the build uses.</p>') + '</section>';
-      html += '<section class="card slot' + (t.comfort ? '' : ' wide') + '"><h2>Comfort <span class="soon">Coming soon</span></h2><p>' +
-        (t.comfort ? 'Boss huts need comfort <b>' + t.comfort + '</b> or higher. Pick your furniture and see your comfort level.' : 'Pick your furniture and see the comfort level it gives.') + '</p></section>';
+      // materials, instances, comfort
+      html += '<section class="card wide"><h2>Materials</h2>' +
+        '<div class="pick"><input id="pc-q" type="search" placeholder="Search pieces, like stone floor" aria-label="Search pieces" autocomplete="off">' +
+        '<select id="pc-cat" aria-label="Category"><option value="">All types</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>' +
+        '<select id="pc-src" aria-label="Source"><option value="">Vanilla and mods</option><option>Vanilla</option><option>Pottery Barn</option><option>Pottery Barn Creative</option></select></div>' +
+        '<div id="pc-res" class="res"></div><div id="pc-list" style="margin-top:12px"></div><div id="pc-tot"></div></section>';
+      html += '<section class="card" id="ins"></section><section class="card" id="cmf"></section>';
       html += '</div>';
       $('detail').innerHTML = html;
+      drawPieces(p);
     }
 
     // submitted history
