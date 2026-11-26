@@ -178,6 +178,10 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
   };
   var KEY = 'buildersBuildTimer.v1';   // same as the Build Timer, so its projects carry over
   // ==================================================
+  // Every list shows A to Z (numbers low to high). "Other" always stays last.
+  var az = function (a, b) { return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }); };
+  [SPECIALTIES, ACTIVITIES, QUESTS, BOARDS].forEach(function (l) { l.sort(az); });
+  TYPES.sort(function (a, b) { return a.name === 'Other' ? 1 : b.name === 'Other' ? -1 : az(a.name, b.name); });
 
   var $ = function (id) { return document.getElementById(id); };
   var S = load(), sel = null, editing = null, confirmDel = false, confirmSess = null;
@@ -398,7 +402,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
   // ---------- render ----------
   function render(keepSessionsOpen) {
     var last = {}; S.sessions.forEach(function (s) { last[s.pid] = Math.max(last[s.pid] || 0, s.end); });
-    var ordered = S.projects.slice().sort(function (a, b) { return (last[b.id] || b.created) - (last[a.id] || a.created); });
+    var ordered = S.projects.slice().sort(function (a, b) { return az(a.name, b.name); });
     var r = S.running && proj(S.running.pid) ? S.running : null;
     if (!r && S.running) S.running = null;
     if (!sel || !proj(sel)) { var saved = pref('sel'); sel = (r && r.pid) || (saved && proj(saved) ? saved : (ordered[0] && ordered[0].id)) || null; }
@@ -458,7 +462,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
       html += '</section>';
       // sessions
       if (list.length) {
-        var sess = list.slice().sort(function (a, b) { return b.end - a.end; }).map(function (s) {
+        var sess = list.slice().sort(function (a, b) { return a.end - b.end; }).map(function (s) {
           if (confirmSess === s.id) return '<div class="confirm">Remove this ' + hm(s.mins) + ' session? <button type="button" class="danger" data-act="sdel-yes" data-sid="' + s.id + '">Remove</button><button type="button" data-act="sdel-no">Keep</button></div>';
           return '<div class="sess-row"><span>' + esc(day(s.end)) + (s.manual ? ' · added by hand' : ' · ' + esc(time(s.start)) + ' to ' + esc(time(s.end))) + (s.note ? ' · ' + esc(s.note) : '') + '</span>' +
             '<span class="t">' + hm(s.mins) + '</span><button type="button" class="ghost danger" aria-label="Remove session" data-act="sdel" data-sid="' + s.id + '">✕</button></div>';
@@ -479,7 +483,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     // submitted history
     var groups = {};
     S.sessions.forEach(function (s) { if (!s.submittedAt) return; var k = s.pid + '|' + s.submittedAt; (groups[k] = groups[k] || { pid: s.pid, at: s.submittedAt, mins: 0 }).mins += s.mins; });
-    var hist = Object.keys(groups).map(function (k) { return groups[k]; }).filter(function (g) { return proj(g.pid); }).sort(function (a, b) { return b.at - a.at; });
+    var hist = Object.keys(groups).map(function (k) { return groups[k]; }).filter(function (g) { return proj(g.pid); }).sort(function (a, b) { return a.at - b.at; });
     $('h-h').textContent = 'Submitted (' + hist.length + ')';
     $('h-list').innerHTML = hist.length ? hist.map(function (g) {
       return '<div class="hist-row"><span><b>' + esc(proj(g.pid).name) + '</b><br><span class="muted small">' + esc(day(g.at)) + '</span></span>' +
