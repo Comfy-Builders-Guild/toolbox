@@ -142,7 +142,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     <section id="detail" aria-live="polite"></section>
   </div>
 </main>
-<footer class="wrap site">Saved on this device only. Durations match the bot's choices: quarter hours up to 5, whole hours 6 to 9, then 10+, 15+, 20+, 25+, 30+ and 60+. Piece costs and comfort come from kirilloid's Valheim database and the Pottery Barn mod.</footer>
+<footer class="wrap site">Saved on this device only. Durations match the bot's choices: quarter hours up to 5, whole hours 6 to 9, then 10+, 15+, 20+, 25+, 30+ and 60+. Piece costs and comfort come from kirilloid's Valheim database and the Pottery Barn and Plant Things mods.</footer>
 <div id="toast" class="toast" hidden role="status"></div>
 
 <script>
@@ -579,7 +579,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
       html += '<section class="card wide"><h2>Materials</h2>' +
         '<div class="pick"><input id="pc-q" type="search" placeholder="Search pieces, like stone floor" aria-label="Search pieces" autocomplete="off">' +
         '<select id="pc-cat" aria-label="Category"><option value="">All types</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>' +
-        '<select id="pc-src" aria-label="Source"><option value="">Vanilla and mods</option><option>Vanilla</option><option>Pottery Barn</option><option>Pottery Barn Creative</option></select></div>' +
+        '<select id="pc-src" aria-label="Source"><option value="">Vanilla and mods</option><option>Plant Things</option><option>Pottery Barn</option><option>Pottery Barn Creative</option><option>Vanilla</option></select></div>' +
         '<div id="pc-res" class="res"></div><div id="pc-list" style="margin-top:12px"></div><div id="pc-tot"></div></section>';
       html += '<section class="card" id="ins"></section><section class="card" id="cmf"></section>';
       html += '</div>';
@@ -599,6 +599,8 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     }).join('') : '<p class="small muted" style="margin:0">Nothing submitted yet.</p>';
     tick();
   }
+  // If the timer is stopped or changed in another tab (like the floating timer on another toolbox page), pick that up here
+  window.addEventListener('storage', function (e) { if (e.key === KEY) { S = load(); render(); } });
   render();
 })();
 </script>
