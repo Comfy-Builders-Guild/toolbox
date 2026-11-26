@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Projects · Builders Toolbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+/* Layout: project list on the left, the picked project's workbench on the right; stacks on phones */
+main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) {
+  main.wrap { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  main.wrap > aside.col { display: contents; }   /* phones: projects, the picked project, then Submitted and Backup */
+  .o1 { order: 1; } .o2 { order: 2; } .o3 { order: 3; } .o4 { order: 4; }
+}
+.col { display: grid; gap: 18px; min-width: 0; }
+.plist { display: grid; gap: 8px; }
+.pitem { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; text-align: left; width: 100%;
+  font-weight: 600; padding: 10px 12px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); }
+.pitem[aria-current="true"] { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal) inset; }
+.pitem .nm { overflow-wrap: anywhere; }
+.pitem .hr { font-family: var(--f-mono); font-size: 13px; color: var(--soft); }
+.pitem .ty { grid-column: 1 / -1; font-size: 12px; font-weight: 500; color: var(--soft); }
+.pulse { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--stop); margin-right: 6px; animation: pulse 1.4s infinite; vertical-align: 1px; }
+@keyframes pulse { 50% { opacity: .25; } }
+.runbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 10px;
+  background: color-mix(in srgb, var(--stop) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--stop) 40%, var(--line)); font-weight: 600; }
+.runbar .t { font-family: var(--f-mono); }
+
+.head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; justify-content: space-between; }
+.head h2.pname { margin: 0 0 6px; font-size: 24px; letter-spacing: 0; text-transform: none; color: var(--ink); overflow-wrap: anywhere; }
+.bench { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 1000px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.bench .wide { grid-column: 1 / -1; }
+.clock { font-family: var(--f-mono); font-weight: 600; font-size: clamp(42px, 9vw, 54px); letter-spacing: .02em; text-align: center; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+.clock.idle { color: var(--soft); }
+.clock-sub { text-align: center; font-size: 13px; color: var(--soft); min-height: 1.5em; margin-bottom: 12px; }
+.bigbtn { width: 100%; font-size: 18px; padding: 13px; border-radius: 10px; letter-spacing: .04em; }
+.bigbtn.start { background: var(--go); border-color: var(--go); color: var(--go-ink); }
+.bigbtn.stop { background: var(--stop); border-color: var(--stop); color: #fff; }
+.total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.total b { font-family: var(--f-mono); font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cmd { font-family: var(--f-mono); font-size: 12.5px; background: var(--code); border: 1px solid var(--line); border-radius: 7px; padding: 9px 11px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.cmd .hl { color: var(--teal); font-weight: 600; }
+.sess { display: grid; gap: 6px; margin-top: 8px; }
+.sess-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: 13px; padding: 6px 8px; border-radius: 6px; background: var(--code); }
+.sess-row .t { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.sess-row button { padding: 2px 8px; font-size: 12px; }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, var(--stop) 12%, var(--card)); }
+.slot { border-style: dashed; background: transparent; }
+.slot p { margin: 6px 0 0; color: var(--soft); font-size: 14px; }
+.meter { height: 10px; border-radius: 999px; background: var(--code); border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
+.meter i { display: block; height: 100%; width: 0; background: var(--frost); }
+.empty { text-align: center; padding: 40px 16px; color: var(--soft); }
+.empty strong { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
+.hist-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: 14px; padding: 8px 0; border-top: 1px solid var(--line); }
+.hist-row:first-child { border-top: 0; }
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Builders Toolbox</p>
+      <h1>PROJECTS</h1>
+    </div>
+    <p class="tagline">Pick a project to time it, see what it needs, and copy your submit command when it's done.</p>
+  </div>
+  <nav class="tabs" aria-label="Toolbox"><div class="wrap">
+    <a href="index.html">Home</a>
+    <a href="projects.html" aria-current="page">Projects</a>
+    <a href="index.html#signs">Signs</a>
+    <a href="index.html#blueprints">Odin's Blueprints</a>
+    <a href="index.html#links">Links &amp; Guides</a>
+  </div></nav>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+  <aside class="col">
+    <section class="card o1" aria-labelledby="list-h">
+      <div class="head" style="margin-bottom:12px">
+        <h2 id="list-h" style="margin:0">Your projects</h2>
+        <button id="p-new" class="primary" type="button">+ New</button>
+      </div>
+      <div id="p-list" class="plist"></div>
+    </section>
+    <section class="card o3" aria-labelledby="h-h">
+      <details id="hist">
+        <summary id="h-h">Submitted</summary>
+        <div id="h-list" style="margin-top:10px"></div>
+      </details>
+    </section>
+    <section class="card o4" aria-labelledby="b-h">
+      <h2 id="b-h">Backup</h2>
+      <p class="small muted" style="margin:0 0 12px">Your projects are saved in this browser only. Export now and then to keep a copy, or to move them to another device.</p>
+      <div class="btns">
+        <button id="b-export" type="button">⬇ Export</button>
+        <button id="b-import" type="button">⬆ Import</button>
+        <input id="b-file" type="file" accept=".json,application/json,text/plain" hidden>
+      </div>
+      <div id="b-panel" hidden style="margin-top:12px" class="fields">
+        <div class="field"><label for="b-text" id="b-label">Backup code</label><textarea id="b-text" spellcheck="false"></textarea></div>
+        <div class="btns" id="b-actions"></div>
+      </div>
+    </section>
+  </aside>
+
+  <div class="col o2">
+    <div id="runbar" class="runbar" hidden></div>
+
+    <form id="p-form" class="fields card" hidden>
+      <h2 id="f-h" style="margin:0">New project</h2>
+      <div class="field"><label for="f-name">Project name</label><input id="f-name" type="text" maxlength="80" required placeholder="Lakeside watchtower"></div>
+      <div class="field"><label for="f-type">What is it?</label><select id="f-type"></select></div>
+      <div id="f-extra"></div>
+      <div class="btns"><button class="primary" type="submit" id="f-save">Save project</button><button class="ghost" type="button" id="f-cancel">Cancel</button></div>
+    </form>
+
+    <section id="detail" aria-live="polite"></section>
+  </div>
+</main>
+<footer class="wrap site">Saved on this device only. Durations match the bot's choices: quarter hours up to 5, whole hours 6 to 9, then 10+, 15+, 20+, 25+, 30+ and 60+.</footer>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(function () {
+  // ================= EDIT THIS PART =================
+  var SPECIALTIES = ['Custom Shops', 'Build Challenge', 'Storage & Organization', 'Gardens & Food Farms',
+    'Processing Areas (Cooking, Crafting, ETC)', 'Statues & Figurines', 'Home Bases', 'Portal Hubs',
+    'Specific Material (Wood, Stone, Marble)', 'Towers, Lighthouses & Pillars', 'Jack of All Trades', 'Newbie Housing',
+    'Nature Themed Builds', 'Modern Style', 'Classic Viking Style', 'Undecided', 'Landscaping', 'Compact Building',
+    'Custom Foliage (Trees, Bushes & Flowers)', 'Raising Comfort Buff', 'Lighting & Chandeliers',
+    'Functional/Practical Building', 'Decoration / Specialty Items', 'Large Builds & Projects', 'Auto Farms & Breeders',
+    'Docks', 'Sign Art & Floating Signs'];
+  var ACTIVITIES = ["Builder's Stash", "Hermit's Hollow", "Lighthouse Keeper's Post", 'Garden Folly', 'One Biome One Room',
+    'Micro Tavern', 'The Privy', 'Tiny Library & Study', "Herbalist's Garden", 'Apiary', 'The Sauna Lodge', 'Treehouse',
+    'Haunted Hut', 'Jól (Yule)', "New Year's Watch Fire", 'Winter Wonderland', 'Newbie Housing'];
+  var QUESTS = ['Winter Stores', 'Smokehouse', 'Ice Fishing Hut', 'Snowed-In Workshop', 'Signal Fire Post'];
+  var BOARDS = ['Builders', 'Explorers', 'Hobbits', 'Mages', 'Merchants', 'Rangers', 'Slayers'];
+  // limit: instance limit for this type (0 = none). comfort: comfort level it needs (0 = none).
+  var TYPES = [
+    { name: 'Commission', fields: ['client', 'specialty'],
+      cmd: '/builder submit_project project_client:{CLIENT} project_type:Commission speciality_category:{SPECIALTY} duration:{HOURS} image:' },
+    { name: 'Commission (NDA)', fields: ['client', 'specialty'],
+      cmd: '/builder submit_project project_client:{CLIENT} project_type:Commission (NDA) speciality_category:{SPECIALTY} duration:{HOURS} image:',
+      note: 'NDA commissions go in the NDA submission channel.' },
+    { name: 'Build Challenge', fields: ['specialty'],
+      cmd: '/builder submit_project project_client:<@1364749444935057529> project_type:Build Challenge speciality_category:{SPECIALTY} duration:{HOURS} image:' },
+    { name: 'Neighborhood (Bootcamp)', fields: ['week'],
+      cmd: '/builder submit_project project_client: @comfybuilder project_type: Neighborhood - Week {EXTRA} speciality_category: Build Challenge duration:{HOURS} image:' },
+    { name: "Odin's Architect Quest", fields: ['quest'],
+      cmd: "/builder submit_project project_client: @comfybuilder project_type: Odin's Architect - {EXTRA} speciality_category: Odin's Arch Quest duration:{HOURS} image:" },
+    { name: 'Builder Activity', fields: ['activity'],
+      cmd: '/builder submit_project project_client:@Brokkr and Sindri project_type:Builder Activities speciality_category:Builder Activities - {EXTRA} duration:{HOURS} image:' },
+    { name: 'Showcase Build', fields: ['specialty'],
+      cmd: '/builder submit_showcase_build speciality_category:{SPECIALTY} duration:{HOURS} image: image2: image3: image4: image5: notes:{NAME}' },
+    { name: 'Best West Board', fields: ['board'], limit: 500,
+      cmd: '/builder server_commissions action: submit project_client: Best West selection: {EXTRA} duration:{HOURS} image1: image2: image3: image4: image5:' },
+    { name: 'Boss Hut', fields: ['hut'], limit: 1000, comfort: 10,
+      cmd: '/builder server_commissions action: submit project_client: Nexus selection: {EXTRA} co_builder: duration:{HOURS} image1: image2: image3: image4: image5:' },
+    { name: 'Collab', fields: ['collab'],
+      cmd: '/builder submit_collab collab_name:{EXTRA} duration:{HOURS} collab_url: image:' },
+    { name: 'Other', fields: [], cmd: '' }
+  ];
+  var FIELD = {
+    client: { label: 'Client (who it\'s for)', kind: 'text', ph: '@PlayerName' },
+    specialty: { label: 'Specialty', kind: 'list', list: SPECIALTIES, ph: 'Start typing to search' },
+    activity: { label: 'Builder Activity', kind: 'select', list: ACTIVITIES },
+    quest: { label: 'Quest', kind: 'select', list: QUESTS },
+    board: { label: 'Board', kind: 'select', list: BOARDS },
+    hut: { label: 'Boss hut', kind: 'text', ph: 'Eikthyr 1' },
+    collab: { label: 'Collab name', kind: 'text', ph: 'Exactly as the guild lists it' },
+    week: { label: 'Week', kind: 'select', list: ['1', '2', '3', '4', '5', '6', '7'] }
+  };
+  var KEY = 'buildersBuildTimer.v1';   // same as the Build Timer, so its projects carry over
+  // ==================================================
+
+  var $ = function (id) { return document.getElementById(id); };
+  var S = load(), sel = null, editing = null, confirmDel = false, confirmSess = null;
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) { var d = JSON.parse(raw); if (d && d.projects && d.sessions) return d; } } catch (e) {}
+    return { projects: [], sessions: [], running: null };
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Could not save. Is this a private window?'); } }
+  function pref(k, v) { try { if (v === undefined) return localStorage.getItem(KEY + '.' + k); localStorage.setItem(KEY + '.' + k, v); } catch (e) {} return null; }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function typeOf(p) { return TYPES.find(function (t) { return t.name === p.type; }) || TYPES[TYPES.length - 1]; }
+  function proj(id) { return S.projects.find(function (p) { return p.id === id; }); }
+  function open(pid) { return S.sessions.filter(function (s) { return s.pid === pid && !s.submittedAt; }); }
+  function sum(list) { return list.reduce(function (a, s) { return a + s.mins; }, 0); }
+  function hrs(mins) { return String(Math.round(mins / 60 * 100) / 100); }
+  function hms(ms) { var s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+  function hm(mins) { return Math.floor(mins / 60) + 'h ' + String(Math.round(mins % 60)).padStart(2, '0') + 'm'; }
+  function day(ts) { var d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate(); }
+  function time(ts) { return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+  // The bot's duration choices: quarter hours up to 5, whole hours 6 to 9, then 10+, 15+, 20+, 25+, 30+, 60+
+  function durChoice(mins) {
+    var h = mins / 60;
+    if (h < 4.875) { var q = Math.max(0.25, Math.round(h * 4) / 4); return q === 1 ? '1 hour' : q + ' hours'; }
+    var steps = [60, 30, 25, 20, 15, 10];
+    for (var i = 0; i < steps.length; i++) if (h >= steps[i]) return steps[i] + '+ hours';
+    return Math.max(5, Math.floor(h)) + ' hours';
+  }
+  function durOptions() {
+    var o = ['<option value="">Pick one</option>'];
+    for (var q = 0.25; q <= 5; q += 0.25) o.push('<option value="' + q + '">' + (q === 1 ? '1 hour' : q + ' hours') + '</option>');
+    [6, 7, 8, 9].forEach(function (h) { o.push('<option value="' + h + '">' + h + ' hours</option>'); });
+    [10, 15, 20, 25, 30, 60].forEach(function (h) { o.push('<option value="' + h + '">' + h + '+ hours</option>'); });
+    return o.join('');
+  }
+  function extraOf(p) { var t = typeOf(p); var k = t.fields.filter(function (f) { return f !== 'client' && f !== 'specialty'; })[0]; return k ? (p.fields[k] || '') : ''; }
+  function command(p) {
+    var t = typeOf(p); if (!t.cmd) return null;
+    var vals = { CLIENT: p.fields.client || '', SPECIALTY: p.fields.specialty || '', EXTRA: extraOf(p), HOURS: durChoice(sum(open(p.id))), NAME: p.name };
+    var missing = t.fields.filter(function (f) { return !p.fields[f]; }).map(function (f) { return FIELD[f].label.replace(/ \(.*\)$/, ''); });
+    var re = /\{(CLIENT|SPECIALTY|EXTRA|HOURS|NAME)\}/g;
+    return { text: t.cmd.replace(re, function (_, k) { return vals[k]; }),
+      html: esc(t.cmd).replace(re, function (_, k) { return '<span class="hl">' + esc(vals[k]) + '</span>'; }), missing: missing };
+  }
+
+  var tt;
+  function toast(msg) { var el = $('toast'); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
+  function copy(text, done) {
+    var fallback = function () {
+      var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); toast(ok ? done : 'Select the text and copy it by hand.');
+    };
+    try { navigator.clipboard.writeText(text).then(function () { toast(done); }, fallback); } catch (e) { fallback(); }
+  }
+
+  // ---------- timer ----------
+  function start(pid) {
+    if (S.running) stop(true);
+    var note = $('t-note') ? $('t-note').value.trim() : '';
+    S.running = { pid: pid, start: Date.now(), note: note };
+    save(); render(); toast('Timing ' + proj(pid).name);
+  }
+  function stop(quiet) {
+    var r = S.running; if (!r) return;
+    var end = Date.now(), mins = Math.round((end - r.start) / 60000);
+    var noteEl = $('t-note'), note = (noteEl && sel === r.pid && noteEl.value.trim()) || r.note || '';
+    S.running = null;
+    if (mins >= 1) { S.sessions.push({ id: uid(), pid: r.pid, start: r.start, end: end, mins: mins, note: note, submittedAt: null }); if (!quiet) toast('Logged ' + hm(mins) + ' on ' + ((proj(r.pid) || {}).name || 'project')); }
+    else if (!quiet) toast('Under a minute, so nothing was logged.');
+    save(); render();
+  }
+  function tick() {
+    var r = S.running;
+    if (r && proj(r.pid)) {
+      var t = hms(Date.now() - r.start);
+      document.title = '⏱ ' + t + ' · ' + proj(r.pid).name;
+      var c = $('t-clock'); if (c && sel === r.pid) c.textContent = t;
+      var b = document.querySelector('#runbar .t'); if (b) b.textContent = t;
+    } else document.title = 'Projects · Builders Toolbox';
+  }
+  setInterval(tick, 1000);
+
+  // ---------- project form ----------
+  $('f-type').innerHTML = TYPES.map(function (t) { return '<option>' + esc(t.name) + '</option>'; }).join('');
+  function drawExtra(values) {
+    var t = TYPES.find(function (x) { return x.name === $('f-type').value; });
+    var html = t.fields.map(function (k) {
+      var f = FIELD[k], id = 'x-' + k;
+      if (f.kind === 'select') return '<div class="field"><label for="' + id + '">' + f.label + '</label><select id="' + id + '"><option value="">Pick one</option>' +
+        f.list.map(function (o) { return '<option' + (o === values[k] ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>';
+      var dl = f.kind === 'list' ? ' list="dl-' + k + '"' : '';
+      var opts = f.kind === 'list' ? '<datalist id="dl-' + k + '">' + f.list.map(function (o) { return '<option value="' + esc(o) + '">'; }).join('') + '</datalist>' : '';
+      return '<div class="field"><label for="' + id + '">' + f.label + '</label><input id="' + id + '" type="text" maxlength="80" value="' + esc(values[k] || '') + '" placeholder="' + esc(f.ph || '') + '"' + dl + '>' + opts + '</div>';
+    }).join('');
+    if (t.note) html += '<p class="note" style="margin:0">' + esc(t.note) + '</p>';
+    $('f-extra').innerHTML = html ? '<div class="fields">' + html + '</div>' : '';
+  }
+  function openForm(p) {
+    editing = p ? p.id : null;
+    $('p-form').hidden = false; $('detail').hidden = true;
+    $('f-h').textContent = p ? 'Edit project' : 'New project';
+    $('f-name').value = p ? p.name : '';
+    $('f-type').value = p ? p.type : TYPES[0].name;
+    drawExtra(p ? p.fields : {});
+    $('f-save').textContent = p ? 'Save changes' : 'Save project';
+    $('f-name').focus();
+  }
+  function closeForm() { $('p-form').hidden = true; $('detail').hidden = false; editing = null; }
+  $('p-new').addEventListener('click', function () { openForm(null); });
+  $('f-cancel').addEventListener('click', closeForm);
+  $('f-type').addEventListener('change', function () { drawExtra({}); });
+  $('p-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('f-name').value.trim(); if (!name) return;
+    var t = TYPES.find(function (x) { return x.name === $('f-type').value; });
+    var fields = {}; t.fields.forEach(function (k) { var el = $('x-' + k); if (el && el.value.trim()) fields[k] = el.value.trim(); });
+    if (editing) { var p = proj(editing); p.name = name; p.type = t.name; p.fields = fields; toast('Saved'); }
+    else { var np = { id: uid(), name: name, type: t.name, fields: fields, created: Date.now() }; S.projects.push(np); sel = np.id; toast('Project added. Press Start when you begin building.'); }
+    closeForm(); save(); render();
+  });
+
+  // ---------- list ----------
+  $('p-list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.act === 'example') { addExample(); return; }
+    sel = b.dataset.id; pref('sel', sel); confirmDel = false; confirmSess = null; closeForm(); render();
+    if (window.innerWidth < 860) $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  function addExample() {
+    var ex = { id: uid(), name: 'Example: Lakeside watchtower', type: 'Showcase Build', fields: { specialty: 'Towers, Lighthouses & Pillars' }, created: Date.now() };
+    var d1 = Date.now() - 2 * 86400000, d2 = Date.now() - 86400000;
+    S.projects.push(ex);
+    S.sessions.push({ id: uid(), pid: ex.id, start: d1, end: d1 + 95 * 60000, mins: 95, note: 'Stone base and stairs', submittedAt: null });
+    S.sessions.push({ id: uid(), pid: ex.id, start: d2, end: d2 + 140 * 60000, mins: 140, note: 'Roof and lighting', submittedAt: null });
+    sel = ex.id; save(); render(); toast('Example added. Delete it whenever you like.');
+  }
+
+  // ---------- detail actions ----------
+  $('detail').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var p = proj(sel), act = b.dataset.act;
+    if (act === 'example') return addExample();
+    if (act === 'new') return openForm(null);
+    if (!p) return;
+    if (act === 'start') start(p.id);
+    else if (act === 'stop') stop();
+    else if (act === 'copy') { var c = command(p); copy(c.text, 'Command copied. Paste it in Discord and add your pictures.'); }
+    else if (act === 'done') { var list = open(p.id), now = Date.now(); list.forEach(function (s) { s.submittedAt = now; }); save(); render(); toast('Marked ' + p.name + ' submitted (' + hm(sum(list)) + ').'); }
+    else if (act === 'edit') openForm(p);
+    else if (act === 'del') { confirmDel = true; render(); }
+    else if (act === 'del-no') { confirmDel = false; render(); }
+    else if (act === 'del-yes') {
+      if (S.running && S.running.pid === p.id) S.running = null;
+      S.projects = S.projects.filter(function (x) { return x.id !== p.id; });
+      S.sessions = S.sessions.filter(function (s) { return s.pid !== p.id; });
+      sel = null; confirmDel = false; save(); render(); toast('Project deleted');
+    }
+    else if (act === 'sdel') { confirmSess = b.dataset.sid; render(true); }
+    else if (act === 'sdel-no') { confirmSess = null; render(true); }
+    else if (act === 'sdel-yes') { S.sessions = S.sessions.filter(function (s) { return s.id !== b.dataset.sid; }); confirmSess = null; save(); render(true); toast('Session removed'); }
+    else if (act === 'add') {
+      var h = parseFloat($('m-hours').value); if (!(h > 0)) { toast('Pick how long you spent.'); return; }
+      var d = $('m-date').value ? new Date($('m-date').value + 'T12:00') : new Date(), mins = Math.round(h * 60);
+      S.sessions.push({ id: uid(), pid: p.id, start: d.getTime(), end: d.getTime(), mins: mins, note: $('m-note').value.trim(), submittedAt: null, manual: true });
+      save(); render(); toast('Added ' + hm(mins) + ' to ' + p.name);
+    }
+  });
+  $('runbar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.act === 'stop') stop(); else { sel = S.running.pid; render(); }
+  });
+  $('h-list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.dataset.act !== 'undo') return;
+    var at = Number(b.dataset.at);
+    S.sessions.forEach(function (s) { if (s.pid === b.dataset.id && s.submittedAt === at) s.submittedAt = null; });
+    save(); render(); toast('Moved back to Ready to submit');
+  });
+
+  // ---------- backup ----------
+  function showPanel(label, text, actions) { $('b-panel').hidden = false; $('b-label').textContent = label; $('b-text').value = text; $('b-actions').innerHTML = actions; }
+  $('b-export').addEventListener('click', function () {
+    var text = JSON.stringify({ app: 'builders-toolbox', v: 1, saved: new Date().toISOString(), data: S });
+    try {
+      var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      var a = document.createElement('a'); a.href = url; a.download = 'builders-toolbox-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    } catch (e) {}
+    showPanel('Backup code (also saved as a file if your browser allowed it)', text, '<button type="button" data-b="copy">Copy backup code</button><button type="button" class="ghost" data-b="close">Close</button>');
+  });
+  $('b-import').addEventListener('click', function () {
+    showPanel('Paste a backup code here, or pick a backup file', '', '<button type="button" class="primary" data-b="restore">Restore from code</button><button type="button" data-b="file">Pick a file</button><button type="button" class="ghost" data-b="close">Close</button>');
+    $('b-text').focus();
+  });
+  $('b-actions').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.b === 'copy') copy($('b-text').value, 'Backup code copied');
+    if (b.dataset.b === 'close') $('b-panel').hidden = true;
+    if (b.dataset.b === 'file') $('b-file').click();
+    if (b.dataset.b === 'restore') restore($('b-text').value);
+  });
+  $('b-file').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var rd = new FileReader(); rd.onload = function () { restore(String(rd.result)); }; rd.readAsText(f); this.value = '';
+  });
+  function restore(text) {
+    try {
+      var o = JSON.parse(text), d = o && o.data ? o.data : o;
+      if (!d || !Array.isArray(d.projects) || !Array.isArray(d.sessions)) throw 0;
+      var have = {}; S.projects.forEach(function (p) { have[p.id] = true; });
+      d.projects.forEach(function (p) { if (!have[p.id]) S.projects.push(p); });
+      var hs = {}; S.sessions.forEach(function (s) { hs[s.id] = true; });
+      var added = 0; d.sessions.forEach(function (s) { if (!hs[s.id]) { S.sessions.push(s); added++; } });
+      save(); render(); $('b-panel').hidden = true; toast('Restored. ' + added + ' session' + (added === 1 ? '' : 's') + ' added.');
+    } catch (e) { toast('That doesn\'t look like a toolbox backup.'); }
+  }
+
+  // ---------- render ----------
+  function render(keepSessionsOpen) {
+    var last = {}; S.sessions.forEach(function (s) { last[s.pid] = Math.max(last[s.pid] || 0, s.end); });
+    var ordered = S.projects.slice().sort(function (a, b) { return (last[b.id] || b.created) - (last[a.id] || a.created); });
+    var r = S.running && proj(S.running.pid) ? S.running : null;
+    if (!r && S.running) S.running = null;
+    if (!sel || !proj(sel)) { var saved = pref('sel'); sel = (r && r.pid) || (saved && proj(saved) ? saved : (ordered[0] && ordered[0].id)) || null; }
+
+    // list
+    $('p-list').innerHTML = ordered.length ? ordered.map(function (p) {
+      var mins = sum(open(p.id)), run = r && r.pid === p.id;
+      return '<button type="button" class="pitem" data-id="' + p.id + '" aria-current="' + (p.id === sel) + '">' +
+        '<span class="nm">' + (run ? '<span class="pulse" aria-hidden="true"></span>' : '') + esc(p.name) + '</span>' +
+        '<span class="hr">' + (mins ? hrs(mins) + ' h' : '') + '</span><span class="ty">' + esc(p.type) + '</span></button>';
+    }).join('') : '<p class="small muted" style="margin:0">No projects yet.</p><div class="btns" style="margin-top:10px"><button type="button" data-act="example">Show me an example</button></div>';
+
+    // running bar (when the timer is on a project you're not looking at)
+    if (r && r.pid !== sel) {
+      $('runbar').hidden = false;
+      $('runbar').innerHTML = '<span><span class="pulse" aria-hidden="true"></span>Timing ' + esc(proj(r.pid).name) + ' · <span class="t">' + hms(Date.now() - r.start) + '</span></span>' +
+        '<span class="btns"><button type="button" data-act="go">Open it</button><button type="button" class="danger" data-act="stop">■ Stop</button></span>';
+    } else $('runbar').hidden = true;
+
+    // detail
+    var p = proj(sel);
+    var openSess = document.querySelector('#detail details[data-k="sess"]');
+    var wasOpen = keepSessionsOpen || (openSess && openSess.open);
+    if (!p) {
+      $('detail').innerHTML = '<div class="card empty"><strong>Start your first project</strong>Make a project for each build you\'re working on. Time it as you go, and when it\'s done your submit command is ready to copy.' +
+        '<div class="btns" style="justify-content:center;margin-top:16px"><button type="button" class="primary" data-act="new">+ New project</button><button type="button" data-act="example">Show me an example</button></div></div>';
+    } else {
+      var t = typeOf(p), list = open(p.id), mins = sum(list), run = r && r.pid === p.id, c = command(p);
+      var chips = '<span class="chip type">' + esc(t.name) + '</span>';
+      t.fields.forEach(function (k) { if (p.fields[k]) chips += '<span class="chip">' + esc(p.fields[k]) + '</span>'; });
+      var html = '<div class="bench">';
+      // head
+      html += '<div class="card wide"><div class="head"><div style="min-width:0"><h2 class="pname">' + esc(p.name) + '</h2><div class="chips">' + chips + '</div></div>' +
+        '<div class="btns"><button type="button" class="ghost" data-act="edit">Edit</button><button type="button" class="ghost danger" data-act="del">Delete</button></div></div>' +
+        (confirmDel ? '<div class="confirm" style="margin-top:12px">Delete ' + esc(p.name) + ' and all its time? <button type="button" class="danger" data-act="del-yes">Delete</button><button type="button" data-act="del-no">Keep</button></div>' : '') + '</div>';
+      // timer
+      html += '<section class="card"><h2>Timer</h2>' +
+        '<div id="t-clock" class="clock' + (run ? '' : ' idle') + '">' + (run ? hms(Date.now() - r.start) : '0:00:00') + '</div>' +
+        '<div class="clock-sub">' + (run ? '<span class="pulse" aria-hidden="true"></span>Running since ' + esc(time(r.start)) : (r ? 'Starting this stops ' + esc(proj(r.pid).name) + '.' : 'Press Start when you begin building.')) + '</div>' +
+        (run ? '<button type="button" class="bigbtn stop" data-act="stop">■ STOP</button>' : '<button type="button" class="bigbtn start" data-act="start">▶ START</button>') +
+        '<div class="field" style="margin-top:12px"><label for="t-note">Note for this session (optional)</label><input id="t-note" type="text" maxlength="120" placeholder="Roof and lighting" value="' + esc(run ? r.note : '') + '"></div>' +
+        '<details style="margin-top:14px"><summary>Forgot the timer? Add time by hand</summary><div class="fields" style="margin-top:10px">' +
+          '<div class="row2"><div class="field"><label for="m-date">Date</label><input id="m-date" type="date" value="' + new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) + '"></div>' +
+          '<div class="field"><label for="m-hours">Time spent</label><select id="m-hours">' + durOptions() + '</select></div></div>' +
+          '<div class="field"><label for="m-note">Note (optional)</label><input id="m-note" type="text" maxlength="120"></div>' +
+          '<div class="btns"><button type="button" class="primary" data-act="add">Add time</button></div></div></details></section>';
+      // submit
+      html += '<section class="card"><h2>Ready to submit</h2>' +
+        '<div class="total"><b>' + hrs(mins) + '</b><span class="muted">hours not submitted yet · ' + list.length + ' session' + (list.length === 1 ? '' : 's') + '</span></div>';
+      if (mins > 0) {
+        html += '<p class="small" style="margin:10px 0">Duration to pick in Discord: <span class="chip type">' + esc(durChoice(mins)) + '</span></p>';
+        if (c) html += '<div class="cmd">' + c.html + '</div>' + (c.missing.length ? '<p class="note">Add the ' + esc(c.missing.join(' and ')) + ' with Edit before you copy this.</p>' : '');
+        else html += '<p class="small muted">There\'s no command for this type.</p>';
+        html += '<div class="btns" style="margin-top:12px">' + (c && !c.missing.length ? '<button type="button" class="primary" data-act="copy">Copy command</button>' : '') +
+          '<button type="button" data-act="done">✔ I submitted this</button></div>';
+      } else html += '<p class="small muted" style="margin:10px 0 0">Time you log shows up here, with the command ready to copy.</p>';
+      html += '</section>';
+      // sessions
+      if (list.length) {
+        var sess = list.slice().sort(function (a, b) { return b.end - a.end; }).map(function (s) {
+          if (confirmSess === s.id) return '<div class="confirm">Remove this ' + hm(s.mins) + ' session? <button type="button" class="danger" data-act="sdel-yes" data-sid="' + s.id + '">Remove</button><button type="button" data-act="sdel-no">Keep</button></div>';
+          return '<div class="sess-row"><span>' + esc(day(s.end)) + (s.manual ? ' · added by hand' : ' · ' + esc(time(s.start)) + ' to ' + esc(time(s.end))) + (s.note ? ' · ' + esc(s.note) : '') + '</span>' +
+            '<span class="t">' + hm(s.mins) + '</span><button type="button" class="ghost danger" aria-label="Remove session" data-act="sdel" data-sid="' + s.id + '">✕</button></div>';
+        }).join('');
+        html += '<section class="card wide"><details data-k="sess"' + (wasOpen ? ' open' : '') + '><summary>Sessions (' + list.length + ')</summary><div class="sess">' + sess + '</div></details></section>';
+      }
+      // coming next
+      html += '<section class="card slot"><h2>Materials <span class="soon">Coming soon</span></h2><p>Add the pieces you plan to place and get the total wood, stone, metal and everything else you need.</p></section>';
+      html += '<section class="card slot"><h2>Instances <span class="soon">Coming soon</span></h2><p>' +
+        (t.limit ? 'This type has a limit of <b>' + t.limit.toLocaleString() + '</b> instances. Your piece list will show how close you are.</p><div class="meter" aria-hidden="true"><i></i></div>'
+                 : 'Your piece list will add up roughly how many instances the build uses.</p>') + '</section>';
+      html += '<section class="card slot' + (t.comfort ? '' : ' wide') + '"><h2>Comfort <span class="soon">Coming soon</span></h2><p>' +
+        (t.comfort ? 'Boss huts need comfort <b>' + t.comfort + '</b> or higher. Pick your furniture and see your comfort level.' : 'Pick your furniture and see the comfort level it gives.') + '</p></section>';
+      html += '</div>';
+      $('detail').innerHTML = html;
+    }
+
+    // submitted history
+    var groups = {};
+    S.sessions.forEach(function (s) { if (!s.submittedAt) return; var k = s.pid + '|' + s.submittedAt; (groups[k] = groups[k] || { pid: s.pid, at: s.submittedAt, mins: 0 }).mins += s.mins; });
+    var hist = Object.keys(groups).map(function (k) { return groups[k]; }).filter(function (g) { return proj(g.pid); }).sort(function (a, b) { return b.at - a.at; });
+    $('h-h').textContent = 'Submitted (' + hist.length + ')';
+    $('h-list').innerHTML = hist.length ? hist.map(function (g) {
+      return '<div class="hist-row"><span><b>' + esc(proj(g.pid).name) + '</b><br><span class="muted small">' + esc(day(g.at)) + '</span></span>' +
+        '<span style="font-family:var(--f-mono)">' + hrs(g.mins) + ' h</span>' +
+        '<button type="button" class="link" data-act="undo" data-id="' + g.pid + '" data-at="' + g.at + '">Undo</button></div>';
+    }).join('') : '<p class="small muted" style="margin:0">Nothing submitted yet.</p>';
+    tick();
+  }
+  render();
+})();
+</script>
+</body>
+</html>
