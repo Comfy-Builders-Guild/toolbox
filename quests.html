@@ -188,10 +188,11 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
   }
 
   function isCmd(c) { return /^\//.test(c); }
-  function cmdHTML(c, label) {
+  function cmdHTML(c, label, n, btn) {
     if (!c) return '';
     if (!isCmd(c)) return '<div class="cmd"><span class="lbl">' + esc(label) + '</span><span class="note">' + esc(c) + '</span></div>';
-    return '<div class="cmd"><span class="lbl">' + esc(label) + '</span><code>' + esc(c) + '</code></div>';
+    return '<div class="cmd"><span class="lbl">' + esc(label) + '</span><code>' + esc(c) + '</code>' +
+      '<button type="button" data-act="copy" data-c="' + (n || 1) + '" style="justify-self:start">' + esc(btn || 'Copy submit command') + '</button></div>';
   }
 
   function renderTabs() {
@@ -232,7 +233,6 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
         '<div class="hd"><div><p class="group">Week ' + esc(w.week) + (w.id === latest ? ' · this week' : '') + '</p><h3>' + esc(w.name) + '</h3></div></div>' +
         (w.due ? '<p class="sum">Due ' + esc(w.due) + '</p>' : '') +
         '<div class="acts"><button type="button" data-act="more" aria-expanded="' + open + '">' + (open ? 'Less' : 'Details') + '</button>' +
-        (isCmd(w.c1) ? '<button type="button" data-act="copy" data-c="1">Copy</button>' : '') +
         '<button type="button" data-act="proj">Start project</button></div>' +
         (open ? '<div class="more"><div class="desc">' + (w.wisdom ? '<h4>Builder Wisdom</h4><p><em>' + esc(w.wisdom) + '</em></p>' : '') +
           '<h4>Requirements</h4>' + reqHTML(w.reqs) + '</div>' + cmdHTML(w.c1, 'Command to submit') +
@@ -265,11 +265,10 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
         (x.points ? '<span class="pts">' + esc(pts(x.points)) + '</span>' : '') + '</div>' +
         '<p class="sum">' + (x.tag ? '<span class="tag">' + esc(x.tag) + '</span>' : '') + esc(x.summary) + '</p>' +
         '<div class="acts"><button type="button" data-act="more" aria-expanded="' + open + '">' + (open ? 'Less' : 'Details') + '</button>' +
-        (isCmd(x.c1) ? '<button type="button" data-act="copy" data-c="1">Copy</button>' : '') +
         (proj ? '<button type="button" data-act="proj">Start project</button>' : '') + '</div>' +
         (open ? '<div class="more"><div class="desc">' + descHTML(x.desc, t) + '</div>' +
           cmdHTML(x.c1, x.c2 ? 'Command' : 'Command to submit') +
-          (x.c2 ? cmdHTML(x.c2, 'Or, as a Showcase Build') + '<button type="button" data-act="copy" data-c="2" style="justify-self:start">Copy Showcase command</button>' : '') +
+          (x.c2 ? cmdHTML(x.c2, 'Or, as a Showcase Build', 2, 'Copy Showcase submit command') : '') +
           (/^https:\/\//.test(x.rules) ? '<a href="' + esc(x.rules) + '" target="_blank" rel="noopener">Read the full rules ↗</a>' : '') + '</div>' : '') +
         '</article>';
     }).join('');
