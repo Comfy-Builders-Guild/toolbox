@@ -19,6 +19,10 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 30px; }
 .mchips button { font-size: 13px; padding: 6px 12px; border-radius: 999px; }
 .mchips button[aria-pressed="true"] { background: color-mix(in srgb, var(--teal) 20%, var(--card)); border-color: var(--teal); }
 [hidden] { display: none !important; }
+.grid.chans { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 8px; }
+.grid.chans a.lk { padding: 10px 12px; }
+.grid.chans a.lk b { font-size: 14px; }
+.grid.chans a.lk b span { display: none; }
 a.vid { grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 12px; padding: 8px 14px 8px 8px; }
 a.vid img { width: 112px; aspect-ratio: 16/9; object-fit: cover; display: block; border-radius: 6px; background: var(--code); }
 .suggest { background: color-mix(in srgb, var(--violet) 12%, var(--card)); border: 1px solid var(--line); border-radius: 9px; font-size: 14px; }
@@ -53,11 +57,12 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
       <p class="eyebrow">Builders Toolbox</p>
       <h1>LINKS &amp; GUIDES</h1>
     </div>
-    <p class="tagline">Guild pages, the mods builders use most, sign helpers and builders worth watching.</p>
+    <p class="tagline">Guild pages, guides and tutorials, the mods builders use most and sign helpers.</p>
   </div>
   <nav class="tabs" aria-label="Toolbox"><div class="wrap">
     <a href="index.html">Home</a>
     <a href="projects.html">Projects</a>
+    <a href="quests.html">Quests &amp; Activities</a>
     <a href="signs.html">Signs</a>
     <a href="blueprints.html">Odin's Blueprints</a>
     <a href="links.html" aria-current="page">Links &amp; Guides</a>
@@ -68,10 +73,9 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
 <main class="wrap">
   <nav class="jump" aria-label="Link sections">
     <a href="#guild" data-tab="guild">Guild</a>
-    <a href="#guides" data-tab="guides">Guides</a>
+    <a href="#guides" data-tab="guides">Guides &amp; Tutorials</a>
     <a href="#mods" data-tab="mods">Mods</a>
     <a href="#signs" data-tab="signs">Signs</a>
-    <a href="#youtube" data-tab="youtube">YouTube</a>
   </nav>
   <details class="suggest" id="suggest">
     <summary>Have a favorite YouTube builder, tutorial video or guide? <span>Tell us about it</span></summary>
@@ -107,20 +111,36 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
   </section>
 
   <section class="panel" hidden id="guides" aria-labelledby="guides-h">
-    <h2 id="guides-h">Guides</h2>
-    <p class="lead">Guides and videos picked by the guild.</p>
-    <h3 class="group">Written guides</h3>
+    <h2 id="guides-h">Guides &amp; Tutorials</h2>
+    <p class="lead">Guides, how-to videos and builders worth watching, picked by the guild.</p>
+    <h3 class="group">Guides</h3>
     <div class="grid">
       <a class="lk" href="https://docs.google.com/document/d/1En0iaKCXlcJ0d1qym_eztkjX_LKLfLn_s_6hyGudJhQ/edit" target="_blank" rel="noopener"><b>Everything Signs <span>Doc ↗</span></b><small>Every sign tag explained, with examples. From Anathema.</small></a>
     </div>
     <h3 class="group">Building tips and tutorials</h3>
     <div class="grid">
-      <a class="lk vid" href="https://www.youtube.com/watch?v=RXURY1Cy_og" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/RXURY1Cy_og/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 1 <span>YouTube ↗</span></b></a>
-      <a class="lk vid" href="https://www.youtube.com/watch?v=KfPkdYuLTFY" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/KfPkdYuLTFY/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 2 <span>YouTube ↗</span></b></a>
-      <a class="lk vid" href="https://www.youtube.com/watch?v=A0z1zNP8b84" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/A0z1zNP8b84/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 3 <span>YouTube ↗</span></b></a>
-      <a class="lk vid" href="https://www.youtube.com/watch?v=_vzb_J99qL0" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/_vzb_J99qL0/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 4 <span>YouTube ↗</span></b></a>
-      <a class="lk vid" href="https://www.youtube.com/watch?v=8-Kj8ZFuoXk" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/8-Kj8ZFuoXk/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 5 <span>YouTube ↗</span></b></a>
-      <a class="lk vid" href="https://www.youtube.com/watch?v=zOgHtpo_Kzc" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/zOgHtpo_Kzc/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 6 <span>YouTube ↗</span></b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=KfPkdYuLTFY" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/KfPkdYuLTFY/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>50+ BUILDING Tips in Valheim 2026 (Valheim Tips &amp; Tricks)</b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=RXURY1Cy_og" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/RXURY1Cy_og/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>EASY and EXPANDABLE chicken, feather and egg farm in Vanilla Valheim - build guide</b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=A0z1zNP8b84" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/A0z1zNP8b84/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Valheim Chicken Coop tutorial</b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=_vzb_J99qL0" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/_vzb_J99qL0/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Valheim Chicken Farm - Simple! Efficient! Automated!</b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=8-Kj8ZFuoXk" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/8-Kj8ZFuoXk/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Valheim Vanilla Build: Octagon Water Portal Hub</b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=zOgHtpo_Kzc" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/zOgHtpo_Kzc/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Valheim: Building the MOST BEAUTIFUL Portal Hub</b></a>
+    </div>
+    <h3 class="group">Guild favorite YouTube streamers</h3>
+    <div class="grid chans">
+      <a class="lk" href="https://www.youtube.com/@CaptainCrumbs" target="_blank" rel="noopener"><b>@CaptainCrumbs <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@Chiselchip" target="_blank" rel="noopener"><b>@Chiselchip <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@Firespark81/playlists" target="_blank" rel="noopener"><b>@Firespark81 <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@KyleAxington" target="_blank" rel="noopener"><b>@KyleAxington <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@mythicbuilds2951" target="_blank" rel="noopener"><b>@mythicbuilds2951 <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@quicksandriggs" target="_blank" rel="noopener"><b>@quicksandriggs <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@sarah4and10" target="_blank" rel="noopener"><b>@sarah4and10 <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@smittysurvival" target="_blank" rel="noopener"><b>@smittysurvival <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@splashopain" target="_blank" rel="noopener"><b>@splashopain <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@tacogxp" target="_blank" rel="noopener"><b>@tacogxp <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@TheBasicBuilder" target="_blank" rel="noopener"><b>@TheBasicBuilder <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@The-B-Side" target="_blank" rel="noopener"><b>@The-B-Side <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@Versaugh" target="_blank" rel="noopener"><b>@Versaugh <span>YouTube ↗</span></b></a>
     </div>
   </section>
 
@@ -196,37 +216,14 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
     </div>
   </section>
 
-  <section class="panel" hidden id="youtube" aria-labelledby="yt-h">
-    <h2 id="yt-h">Builders on YouTube</h2>
-    <p class="lead">Grab a snack and steal some ideas.</p>
-    <h3 class="group">Guild favorites</h3>
-    <div class="grid">
-      <a class="lk" href="https://www.youtube.com/@Chiselchip" target="_blank" rel="noopener"><b>@Chiselchip <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@KyleAxington" target="_blank" rel="noopener"><b>@KyleAxington <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@smittysurvival" target="_blank" rel="noopener"><b>@smittysurvival <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@TheBasicBuilder" target="_blank" rel="noopener"><b>@TheBasicBuilder <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@The-B-Side" target="_blank" rel="noopener"><b>@The-B-Side <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@Versaugh" target="_blank" rel="noopener"><b>@Versaugh <span>YouTube ↗</span></b></a>
-    </div>
-    <h3 class="group">More to check out</h3>
-    <div class="grid">
-      <a class="lk" href="https://www.youtube.com/@CaptainCrumbs" target="_blank" rel="noopener"><b>@CaptainCrumbs <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@Firespark81/playlists" target="_blank" rel="noopener"><b>@Firespark81 <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@mythicbuilds2951" target="_blank" rel="noopener"><b>@mythicbuilds2951 <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/c/NickRawcliffe/videos" target="_blank" rel="noopener"><b>@NickRawcliffe <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@quicksandriggs" target="_blank" rel="noopener"><b>@quicksandriggs <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@sarah4and10" target="_blank" rel="noopener"><b>@sarah4and10 <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@splashopain" target="_blank" rel="noopener"><b>@splashopain <span>YouTube ↗</span></b></a>
-      <a class="lk" href="https://www.youtube.com/@tacogxp" target="_blank" rel="noopener"><b>@tacogxp <span>YouTube ↗</span></b></a>
-    </div>
-  </section>
 </main>
 <footer class="wrap site">Made for the Comfy Valheim Builders Guild. Discord links open in the Discord app if you have it.</footer>
 <script>
 (function () {
-  var tabs = ['guild','guides','mods','signs','youtube'];
+  var tabs = ['guild','guides','mods','signs'];
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   function show(t) {
+    if (t === 'youtube') t = 'guides';
     if (tabs.indexOf(t) < 0) t = 'guild';
     tabs.forEach(function (x) { document.getElementById(x).hidden = x !== t; });
     document.querySelectorAll('.jump a').forEach(function (a) { a.setAttribute('aria-current', a.dataset.tab === t ? 'true' : 'false'); });

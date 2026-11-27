@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Quests &amp; Activities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="timer-badge.js" defer></script>
+<style>
+main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
+[hidden] { display: none !important; }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); }
+.jump a:hover { border-color: var(--teal); }
+.jump a[aria-current="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+.jump a .n { opacity: .7; font-weight: 600; margin-left: 4px; }
+.top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.top input { max-width: 320px; }
+.status { font-size: 13px; color: var(--soft); margin: 0; }
+.intro { background: color-mix(in srgb, var(--violet) 12%, var(--card)); border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-size: 14px; line-height: 1.55; margin: 0; }
+.intro p { margin: 0 0 6px; } .intro p:last-child { margin: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; align-items: start; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.q.open { grid-column: 1 / -1; }
+.q .hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.q h3 { margin: 0; font-size: 17px; line-height: 1.3; }
+.q .group { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); margin: 0 0 2px; }
+.pts { white-space: nowrap; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--teal) 16%, var(--card)); color: var(--ink); }
+.tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--violet) 18%, var(--card)); margin-right: 6px; }
+.q .sum { margin: 0; color: var(--soft); font-size: 14px; }
+.q .acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.q .acts button { font-size: 13px; padding: 7px 12px; }
+.q .more { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.q .desc p { margin: 0 0 8px; line-height: 1.6; max-width: 70ch; }
+.q .desc h4 { margin: 10px 0 4px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); }
+.q .desc ul { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 3px; }
+.cmd { display: grid; gap: 6px; }
+.cmd code { display: block; background: var(--code); border: 1px solid var(--line); border-radius: 7px; padding: 9px 11px; font-family: var(--f-mono, 'Roboto Mono', monospace); font-size: 12.5px; overflow-wrap: anywhere; }
+.cmd .lbl { font-size: 12px; font-weight: 600; color: var(--soft); }
+.cmd .note { font-size: 14px; font-weight: 600; }
+.empty { color: var(--soft); font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Builders Toolbox</p>
+      <h1>QUESTS &amp; ACTIVITIES</h1>
+    </div>
+    <p class="tagline">Everything you can build for points this era, with the command to submit it.</p>
+  </div>
+  <nav class="tabs" aria-label="Toolbox"><div class="wrap">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="quests.html" aria-current="page">Quests &amp; Activities</a>
+    <a href="signs.html">Signs</a>
+    <a href="blueprints.html">Odin's Blueprints</a>
+    <a href="links.html">Links &amp; Guides</a>
+  </div></nav>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+  <nav class="jump" id="tabs" aria-label="Sections"></nav>
+  <div class="top">
+    <input type="search" id="q" placeholder="Search this tab" aria-label="Search">
+    <p class="status" id="status"></p>
+  </div>
+  <div class="intro" id="intro" hidden></div>
+  <div class="cards" id="cards"></div>
+</main>
+<div class="toast" id="toast" hidden></div>
+<footer class="wrap site">Made for the Comfy Valheim Builders Guild. This page reads straight from the Player Tracker.</footer>
+
+<script>
+(function () {
+  // ================= EDIT THIS PART =================
+  // The "Earning Points Data" tab, published to the web as CSV
+  var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ0pGSFpWaCp97TKZ8mh26bALm-CL-60fqg5eCPIbjc8WV_bH9tBm7IPzVKseOWDv0YXbnvum9RMtg/pub?gid=1188165432&single=true&output=csv';
+  // Tabs on this page (A to Z) and which Section names from the sheet go in each
+  var TABS = [
+    { id: 'activities', label: 'Builder Activities', sections: ['Builder Activities'],
+      intro: ['One Builder Activity per week, and each activity only once per era. Each activity has its own points.'],
+      strip: ['One Builder Activity per week, and each activity only once per era.'],
+      project: { type: 'Builder Activity', field: 'activity' } },
+    { id: 'quests', label: "Odin's Quests", sections: ["Odin's Architect Quests"],
+      intro: ["The stories on these quests are there to set the mood. Think of each one as a feel to aim for. Hit the must-haves, then make it your own: go bigger, add a twist, tell your own story. We love seeing builds that go way past what's written here."],
+      liftPara: 'Every quest also needs',
+      project: { type: "Odin's Architect Quest", field: 'quest' } },
+    { id: 'server', label: 'Server Commissions', sections: ['Best West', 'Boss Huts'], showGroup: true,
+      project: { byGroup: { 'Best West': { type: 'Best West Board', field: 'board' }, 'Boss Huts': { type: 'Boss Hut', field: 'hut' } } } }
+  ];
+  var KEY = 'buildersBuildTimer.v1';   // the Projects page's saved data
+  var SNAPSHOT = [["Section", "Section Link", "Activity", "Rules Link", "Points", "Participation Credit", "Summary", "Description", "Command 1", "Command 2"], ["Builds & Commissions", "", "Commissions", "https://discord.com/channels/820120530107367435/1383653457721819186/1383653457721819186", "1 - 5", "No", "A build project between a client and a builder.", "A Build Project between two parties: a Client & a Builder. Commission time is required with picture(s).", "/builder submit_project project_client: project_type:Commission speciality_category: duration: image:", ""], ["Builds & Commissions", "", "Commissions (NDA)", "https://ptb.discord.com/channels/820120530107367435/1383653457721819186/1383653457721819186", "1 - 5", "No", "For builds for future Comfy content.", "Use \"Commission\" for the project type unless you are completing a build for a future Comfy Content (Creator Event, Guild location, Etc).", "/builder submit_project project_client: project_type:Commission (NDA) speciality_category: duration: image:", ""], ["Builds & Commissions", "", "Build Challenge", "", "1", "No", "Periodic challenges to try new styles or skills.", "Periodic Challenges to try new building styles or skills.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Build Challenge speciality_category: duration: image:", ""], ["Builds & Commissions", "", "Showcase Build", "https://ptb.discord.com/channels/820120530107367435/1387220371727716442/1387220371727716442", "5-10", "No", "Show off your creativity, any size or style.", "An opportunity to showcase your creativity. Here size and building style are not important, only your vision or version of your idea.\n\nComfy Collabs that qualify should be submitted using this option.", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:", ""], ["Events & Classes", "", "Builder Race", "https://ptb.discord.com/channels/820120530107367435/1384897278795317289/1384897278795317289", "1", "Yes", "Speed races to show your builder knowledge.", "Participate in one of our Speed Races & showcase your builder knowledge.", "Submitted by Staff!", ""], ["Events & Classes", "", "Hosted Class - Attendee", "https://ptb.discord.com/channels/820120530107367435/1384897278795317289/1384897278795317289", "1", "Yes", "Learn from your builder peers in a class.", "Learn from your builder peers in a builder class. Must attend at least 30 minutes.", "Submitted by class teacher", ""], ["Events & Classes", "", "Hosted Class - Teacher", "https://ptb.discord.com/channels/820120530107367435/1384897278795317289/1384897278795317289", "2", "Yes", "Teach your fellow builders a new skill.", "Teach your fellow builders a new skill or subject. Must have 10 attendees for 30 minutes minimum per teacher (2 teachers max).", "/builder submit_class participants: class_type:Hosted Class duration: hosted_class_notes: image:", ""], ["Events & Classes", "", "Impromptu Class - Attendee", "", "0.5", "", "", "", "Submitted by class teacher", ""], ["Events & Classes", "", "Impromptu Class - Teacher", "", "1", "", "", "", "/builder submit_class participants: class_type:Impromptu Class duration: image:", ""], ["Events & Classes", "", "Competitions", "", "As announced", "Yes", "Compete for the top spot in a category.", "An opportunity to vie for the top spot within a specific category or type of building. Top 3 will earn 3 points. Everyone else will earn 1.", "Use the bot command provided in the competition message.", ""], ["Builds & Commissions", "", "Portfolio", "", "0", "No", "Advertise the building you enjoy and your work.", "Advertise the type of building you enjoy & examples of your work. Must include 1 picture from the current Era.", "/builder submit_portfolio portfolio_prices: portfolio_1st_specialty: image:", ""], ["Odin’s Architect Quests", "", "Winter Stores", "", "1 - 5", "No", "Build the village's winter storehouse or cellar.", "The harvest is in, and the village has one job left before the snow: make it last until spring. Somewhere cool and tucked out of the wind, every barrel, sack, and shelf is spoken for. Whoever runs this place knows exactly what's in it and how long it'll hold...\n\nMust-haves:\n• Built partly into the ground or a hillside (a cellar, a dug-out, under a rock)\n• At least 4 different kinds of goods, stored in different ways (barrels, shelves, hanging, crates)\n• A way of keeping it organized, like signs, labels, or clear sections\n• A spot that belongs to the keeper (a desk, a stool and lantern, a tally on the wall)\n• Winter pressing in from outside: snow, frost, or a sealed-up entrance\n\nEvery quest also needs: a finished outside and a dressed-up inside; signs of use (something left mid-task, a personal touch, a reason it exists); a fit with the land (worked into the terrain, a path leading in, surroundings dressed); and lighting so it looks good after dark. You have 1 to 5 hours for each quest.", "/builder submit_project project_client: @comfybuilder project_type: Odin's Architect - Winter Stores speciality_category: Odin's Arch Quest duration: image:", ""], ["Odin’s Architect Quests", "", "Smokehouse", "", "1 - 5", "No", "Build a working smokehouse at the edge of camp.", "Thin smoke curls out of a little shed at the edge of camp, and everyone downwind knows exactly what's going on in there. This is a working building, so it should look worked in: a place to cut and prep, a place to smoke, and a growing pile of what's already done.\n\nMust-haves:\n• A smoke source with somewhere for the smoke to go (vent, chimney, or slatted roof)\n• At least 2 cooking stations\n• Meat at different stages: fresh, hanging to smoke, and finished and stored\n• A separate prep area from the smoking area\n• Fuel on hand, like a woodpile or stacked logs\n\nEvery quest also needs: a finished outside and a dressed-up inside; signs of use (something left mid-task, a personal touch, a reason it exists); a fit with the land (worked into the terrain, a path leading in, surroundings dressed); and lighting so it looks good after dark. You have 1 to 5 hours for each quest.", "/builder submit_project project_client: @comfybuilder project_type: Odin's Architect - Smokehouse speciality_category: Odin's Arch Quest duration: image:", ""], ["Odin’s Architect Quests", "", "Ice Fishing Hut", "", "1 - 5", "No", "Build a tiny shelter at the edge of the cold water.", "Out on the edge of the cold water, someone built a tiny shelter just big enough for a fire, a seat, and a lot of patience. They come back every day, whether the fish bite or not, so the hut has slowly filled up with their stuff and their stories.\n\nMust-haves:\n• Built at the water's edge or out over it (on a pier, stilts, or the shoreline)\n• A fire and somewhere to sit\n• Fishing gear and the day's catch on display\n• Signs of a regular: a tally of fish, a bed, a lucky charm, a carved sign\n\nEvery quest also needs: a finished outside and a dressed-up inside; signs of use (something left mid-task, a personal touch, a reason it exists); a fit with the land (worked into the terrain, a path leading in, surroundings dressed); and lighting so it looks good after dark. You have 1 to 5 hours for each quest.", "/builder submit_project project_client: @comfybuilder project_type: Odin's Architect - Ice Fishing Hut speciality_category: Odin's Arch Quest duration: image:", ""], ["Odin’s Architect Quests", "", "Snowed-In Workshop", "", "1 - 5", "No", "Build a crafter's workshop buried in snow.", "The snow is up to the windows, and the crafter inside could not care less. There's a project on the bench they've been chasing for weeks, tools everywhere, and a fire keeping their fingers working. You pick the craft (woodworker, smith, toymaker, something else), but nobody should need a sign to guess what they make.\n\nMust-haves:\n• An entrance that looks snowed in\n• A project visibly in progress\n• Tools and materials that match the craft\n• A hearth, forge, or fire with proper venting\n• A spot where the crafter eats, rests, and sleeps between work\n\nEvery quest also needs: a finished outside and a dressed-up inside; signs of use (something left mid-task, a personal touch, a reason it exists); a fit with the land (worked into the terrain, a path leading in, surroundings dressed); and lighting so it looks good after dark. You have 1 to 5 hours for each quest.", "/builder submit_project project_client: @comfybuilder project_type: Odin's Architect - Snowed-In Workshop speciality_category: Odin's Arch Quest duration: image:", ""], ["Odin’s Architect Quests", "", "Signal Fire Post", "", "1 - 5", "No", "Build a watchtower home with a signal fire on top.", "High on a cold ridge, a stone watchtower keeps an eye on the hills. Up top, a fire is stacked and ready to light the moment trouble shows. Down below, the keeper has turned the tower into a home for the long winter: somewhere to sleep, eat, and stay warm between watches.\n\nMust-haves:\n• A tower at least 3 floors or levels tall, built on high ground\n• A signal fire at the top, ready to light (or already lit)\n• A home inside: a bed, a hearth, a kitchen, and a small workshop with at least one work table\n• A watch log or lookout spot\n• A way up that feels part of the build, like a winding stair, ladders, or a cliff path\n\nEvery quest also needs: a finished outside and a dressed-up inside; signs of use (something left mid-task, a personal touch, a reason it exists); a fit with the land (worked into the terrain, a path leading in, surroundings dressed); and lighting so it looks good after dark. You have 1 to 5 hours for each quest.", "/builder submit_project project_client: @comfybuilder project_type: Odin's Architect - Signal Fire Post speciality_category: Odin's Arch Quest duration: image:", ""], ["Slayers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458939864125533", "Tower Defence Event", "", "1", "No", "Be the builder in the Slayer Tower Defense event.", "Participate as the Builder in the Slayer Tower Defense event.", "/builder submit_collab collab_name:Tower Defence Event duration: collab_url: image:", ""], ["Slayers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458939864125533", "Fight Club", "https://docs.google.com/spreadsheets/d/1Xij6i1JIUT8iAdVgMDuwy9JzZGvMaU0xv85pSJZmElM/edit?gid=202732672", "1 or 5", "No", "Complete the Fight Club summon with the Slayers.", "Complete the Fight Club summon with the Slayers.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders.", "/builder submit_collab collab_name:Fight Club duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Fight Club"], ["Slayers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458939864125533", "Dedication", "https://docs.google.com/spreadsheets/d/1Xij6i1JIUT8iAdVgMDuwy9JzZGvMaU0xv85pSJZmElM/edit?gid=202732672", "1 or 5", "No", "Complete the Dedication summon with the Slayers.", "Complete the Dedication summon with the Slayers.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders.", "/builder submit_collab collab_name:Dedication duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Dedication"], ["Slayers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458939864125533", "Shrine of Smoke", "https://docs.google.com/spreadsheets/d/1Xij6i1JIUT8iAdVgMDuwy9JzZGvMaU0xv85pSJZmElM/edit?gid=202732672", "1 or 5", "No", "Complete the Shrine of Smoke summon with the Slayers.", "Complete the Shrine of Smoke summon with the Slayers.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders.", "/builder submit_collab collab_name:Shrine of Smoke duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Shrine of Smoke"], ["Slayers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458939864125533", "Training Grounds", "https://docs.google.com/spreadsheets/d/1Xij6i1JIUT8iAdVgMDuwy9JzZGvMaU0xv85pSJZmElM/edit?gid=202732672", "1 or 5", "No", "Complete the Training Grounds summon with the Slayers.", "Complete the Training Grounds summon with the Slayers.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders.", "/builder submit_collab collab_name:Grand Training Grounds duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Grand Training"], ["Explorers", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234141946253484", "Guiding the Lost", "https://docs.google.com/spreadsheets/d/1Fo4gxiYKbppQwH0Si-QCHvxwzsHV4vquFvIiAxwOS4s/edit?gid=1874077560", "1 or 5", "No", "Complete the Guiding the Lost AP task.", "Complete the Guiding the Lost AP task with the Explorers.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders.", "/builder submit_collab collab_name:Guiding the Lost duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Guiding the Lost"], ["Explorers", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234141946253484", "Frontier Foundations", "https://docs.google.com/spreadsheets/d/1Fo4gxiYKbppQwH0Si-QCHvxwzsHV4vquFvIiAxwOS4s/edit?gid=1874077560", "1 - 5", "No", "Complete the Frontier Foundations AP task.", "Complete the Frontier Foundations AP task with the Explorers.", "Submit this as a Commission.", ""], ["Explorers", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234141946253484", "Oathbound", "https://docs.google.com/spreadsheets/d/1Fo4gxiYKbppQwH0Si-QCHvxwzsHV4vquFvIiAxwOS4s/edit?gid=1472277909", "1", "No", "Complete the Oathbound achievement.", "Complete the Oathbound achievement with the Explorers.", "/builder submit_collab collab_name:Oathbound duration: collab_url: image:", ""], ["Mages", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234545140498542", "Astral Observatory", "https://docs.google.com/spreadsheets/d/16XAv5hg4eb2xJwclZDMLn3MzVtj7Ril4uH8FQ7bFxJk/edit?gid=1320924667", "1 or 5", "No", "Complete the Astral Observatory IP task.", "Complete the Astral Observatory IP task with the Mages.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders + 1 to Mages.", "/builder submit_collab collab_name:Astral Observatory duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Astral Observatory"], ["Mages", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234545140498542", "Obelisk of Grimoire", "https://docs.google.com/spreadsheets/d/16XAv5hg4eb2xJwclZDMLn3MzVtj7Ril4uH8FQ7bFxJk/edit?gid=1320924667", "1 or 5", "No", "Complete the Obelisk of Grimoire IP task.", "Complete the Obelisk of Grimoire IP task with the Mages.", "/builder submit_collab collab_name:Obelisk of Grimoire duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Obelisk of Grimoire"], ["Hobbits", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234173562916927", "Fangorn Forest", "https://docs.google.com/spreadsheets/d/1QaEU6OjLw92RzvU-8kDwNlJ-TN5102C5uN_JLf_yF4Y/edit?gid=194136419", "1 or 5", "No", "Complete the Fangorn Forest quest.", "Complete the Fangorn Forest quest with the Hobbits.\n\nIf submitting as a Showcase Build, please supply 1 portal tag to Builders.", "/builder submit_collab collab_name:Fangorn Forest duration: collab_url: image:", "/builder submit_showcase_build speciality_category:Large Builds & Projects duration: image: image2: image3: image4: image5: notes:Fangorn Forest"], ["Hobbits", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234173562916927", "Hobbit Handiwork", "https://docs.google.com/spreadsheets/d/1QaEU6OjLw92RzvU-8kDwNlJ-TN5102C5uN_JLf_yF4Y/edit?gid=194136419", "0.5", "No", "Complete the Hobbit Handiwork quest.", "Complete the Hobbit Handiwork quest with the Hobbits.", "/builder submit_collab collab_name:Hobbit Handiwork duration: collab_url: image:", ""], ["Hobbits", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234173562916927", "Comforts of Home", "https://docs.google.com/spreadsheets/d/1QaEU6OjLw92RzvU-8kDwNlJ-TN5102C5uN_JLf_yF4Y/edit?gid=194136419", "0.5", "No", "Complete the Comforts of Home quest.", "Complete the Comforts of Home quest with the Hobbits.", "/builder submit_collab collab_name:Comforts of Home 1 duration: collab_url: image:", ""], ["Hobbits", "https://discord.com/channels/820120530107367435/1387233164166037715/1387234173562916927", "Comforts of Home II", "https://docs.google.com/spreadsheets/d/1QaEU6OjLw92RzvU-8kDwNlJ-TN5102C5uN_JLf_yF4Y/edit?gid=194136419", "0.5", "No", "Complete the Comforts of Home II quest.", "Complete the Comforts of Home II quest with the Hobbits.", "/builder submit_collab collab_name:Comforts of Home 2 duration: collab_url: image:", ""], ["Merchants", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458511986393088", "Home Improvement", "https://docs.google.com/spreadsheets/d/1b4_ha5lrv_pztR8WAinmbY2iCUSzfn9JEITuI4_i22I/edit?gid=59617747", "1 - 5", "No", "Help a merchant earn the Home Improvement Token.", "Complete a commission for a merchant looking to complete the Home Improvement Token.", "Submit this as a Commission.", ""], ["Best West", "https://discord.com/channels/820120530107367435/1387233164166037715/1387233382752190595", "Recruitment Board", "", "1 - 5", "No", "Build a guild recruitment board for Best West.", "Build a Guild Recruitment Board for Best West.", "/builder submit_project project_client:@ComfyBestWest#2833 project_type:Commission speciality_category: duration: image:", ""], ["Boss Huts", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458571134210249", "Boss Huts", "", "1 - 5", "No", "Build a boss hut for the Nexus.", "Build a Boss Hut for the Nexus.", "/builder submit_project project_client:NexusKeeper project_type:Commission speciality_category: duration: image:", ""], ["Builder Activities", "", "Builder's Stash", "", "1", "No", "A hidden storage room full of building materials.", "A hidden storage room full of building materials (chests, stacked wood, stone, and other building supplies), with an entrance that's hidden, like a fake wall, a trapdoor in the floor, or a door into a hillside. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Builder's Stash duration: image:", ""], ["Builder Activities", "", "Hermit's Hollow", "", "2", "No", "A one-room home dug into a cliff or hillside.", "A one-room home dug under a rock on a cliff or hillside, with a bed, a fire, and storage. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Hermit's Hollow duration: image:", ""], ["Builder Activities", "", "Lighthouse Keeper's Post", "", "3", "No", "A coastal tower with a light on top and living space below.", "A tower on the coast with a fire or lighting at the top and a small living space within with a hearth, bed, table and decoration. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Lighthouse Keeper's Post duration: image:", ""], ["Builder Activities", "", "Garden Folly", "", "1", "No", "A purely decorative garden structure.", "A decorative garden structure, like a gazebo, an archway, or a pretend ruin, set in a garden with paths and plants. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Garden Folly duration: image:", ""], ["Builder Activities", "", "One Biome One Room", "", "2", "No", "A room built entirely from one biome's materials.", "A single room where every building piece and decoration comes from the same biome, like all swamp or all Mistlands. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - One Biome One Room duration: image:", ""], ["Builder Activities", "", "Micro Tavern", "", "2", "No", "The smallest tavern you can make work.", "The smallest tavern you can make work, with a bar counter, mead barrels or kegs, a fire, and seating for just a few guests. Make it feel cozy and inviting. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Micro Tavern duration: image:", ""], ["Builder Activities", "", "The Privy", "", "3", "No", "A public restroom for travelers.", "A public restroom for travelers, with an outhouse-style building, a few stalls with seats, a water barrel or basin to wash up, and a lantern so nobody gets lost at night. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - The Privy duration: image:", ""], ["Builder Activities", "", "Tiny Library & Study", "", "1", "No", "A small room for books, scrolls, and studying.", "A small room with shelves of books and scrolls, a desk and chair for studying, and good lighting to read by. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Tiny Library & Study duration: image:", ""], ["Builder Activities", "", "Herbalist's Garden", "", "2", "No", "Raised beds of crops and flowers with a tool shed.", "Planted crops and flowers in raised beds, with a small shed for tools and seeds. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Herbalist's Garden duration: image:", ""], ["Builder Activities", "", "Apiary", "", "1", "No", "A fenced garden built around beehives.", "A fenced in garden built around beehives, with flowers and a path to collect the honey. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Apiary duration: image:", ""], ["Builder Activities", "", "The Sauna Lodge", "", "2", "No", "A building around a hot tub.", "A building around a hot tub, with benches and a place to change and store clothing and towels. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - The Sauna Lodge duration: image:", ""], ["Builder Activities", "", "Treehouse", "", "3", "No", "A small house up in a large tree.", "A small decorated house built up in a large tree, off the ground, with a ladder or stairs to get up and a floor or platform resting in the branches. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Treehouse duration: image:", ""], ["Builder Activities", "", "Haunted Hut", "", "2", "No", "A spooky cabin for Halloween. (Seasonal)", "Seasonal. A spooky cabin for Halloween, decorated with Jack-o-turnips. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Haunted Hut duration: image:", ""], ["Builder Activities", "", "Jól (Yule)", "", "3", "No", "A midwinter hall for the longest night. (Seasonal: December)", "Seasonal, open in December. A midwinter hall with a large central fire, a feast table, and Yule decorations like the Yule tree, wreaths, and mistletoe. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Jól (Yule) duration: image:", ""], ["Builder Activities", "", "New Year's Watch Fire", "", "1", "No", "A gathering spot to ring in the new year. (Seasonal)", "Seasonal, open late December into January. A gathering spot built around a big fire on high ground, with seating, torches or lanterns around it, and a table for food and drinks. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - New Year's Watch Fire duration: image:", ""], ["Builder Activities", "", "Winter Wonderland", "", "3", "No", "A snowy scene in the Mountains. (Seasonal)", "Seasonal, open December to February. A snowy scene in the Mountains, with snow-covered roofs and paths, lanterns, a frozen pond or decorated trees, and a cozy spot to warm up by a fire. One Builder Activity per week, and each activity only once per era.", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Winter Wonderland duration: image:", ""], ["Builder Activities", "", "Newbie Housing", "", "3", "No", "A free, fenced-in starter home for new players on spawn island.", "A free starter home for new players on spawn island.\nRequirements:\n• No bigger than 8x8\n• Fenced in, with room for a small garden, and space set aside for a smelter and a kiln\n• 1 portal connected to the Newbie Housing portal hub (reached through Builder HQ)\n• 1 ward that isn't activated\n• A bed\n• A level 3 workbench with small storage\n• A cooking area with cooking storage\n• 3 stacks of wood in a chest\n• Comfort 10\n• A sign at the front door: \"Builders Guild - Newbie Housing. To claim, put your name on the sign and start living in it.\"\n• Screenshots need to show every requirement", "/builder submit_project project_client:\u003c@1364749444935057529> project_type:Builder Activities speciality_category:Builder Activities - Newbie Housing duration: image:", ""], ["Rangers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458801250767039", "Ranger Stations - Mountain Retreat", "https://docs.google.com/spreadsheets/d/1iRH4C7ml1sJIiX_O175pBhP0m78sWjBM9-i37DWtCdc/edit?gid=897323579", "0.5", "No", "Complete the Mountain Retreat Ranger Station.", "Complete the Mountain Retreat Ranger Station with the Rangers.", "/builder submit_collab collab_name:Ranger Stations - Mountain Retreat duration: collab_url: image:", ""], ["Rangers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458801250767039", "Ranger Stations - Igloo", "https://docs.google.com/spreadsheets/d/1iRH4C7ml1sJIiX_O175pBhP0m78sWjBM9-i37DWtCdc/edit?gid=897323579", "0.5", "No", "Complete the Igloo Ranger Station.", "Complete the Igloo Ranger Station with the Rangers.", "/builder submit_collab collab_name:Ranger Stations - Igloo duration: collab_url: image:", ""], ["Rangers", "https://discord.com/channels/820120530107367435/1387233164166037715/1514458801250767039", "Ranger Stations - Demistification", "https://docs.google.com/spreadsheets/d/1iRH4C7ml1sJIiX_O175pBhP0m78sWjBM9-i37DWtCdc/edit?gid=897323579", "0.5", "No", "Complete the Demistification Ranger Station.", "Complete the Demistification Ranger Station with the Rangers.", "/builder submit_collab collab_name:Ranger Stations - Demistification duration: collab_url: image:", ""]];        // copy of the sheet, used only if the live sheet can't be reached
+  // ==================================================
+
+  var $ = function (id) { return document.getElementById(id); };
+  var az = function (a, b) { return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }); };
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function norm(t) { return String(t || '').replace(/[‘’]/g, "'").trim(); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  var tt; function toast(m) { var el = $('toast'); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
+  function copy(text, done) {
+    var fb = function () { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); toast(ok ? done : 'Select the text and copy it by hand.'); };
+    try { navigator.clipboard.writeText(text).then(function () { toast(done); }, fb); } catch (e) { fb(); }
+  }
+
+  function parseCSV(text) {
+    var rows = [], row = [], f = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
+      else if (c !== '\r') f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    return rows;
+  }
+
+  var ITEMS = [], tab = 'activities', openId = null;
+
+  function load(rows) {
+    var head = (rows[0] || []).map(function (h) { return norm(h).toLowerCase(); });
+    var col = function (n) { return head.indexOf(n); };
+    var C = { section: col('section'), name: col('activity'), rules: col('rules link'), points: col('points'), summary: col('summary'), desc: col('description'), c1: col('command 1'), c2: col('command 2') };
+    if (C.name < 0 || C.section < 0) return false;
+    ITEMS = rows.slice(1).map(function (r, i) {
+      var g = function (k) { return C[k] < 0 ? '' : norm(r[C[k]]); };
+      var summary = g('summary'), tag = '';
+      var m = summary.match(/\s*\((Seasonal[^)]*)\)\s*$/i);
+      if (m) { tag = m[1]; summary = summary.slice(0, m.index); }
+      return { id: 'i' + i, section: g('section'), name: g('name'), rules: g('rules'), points: g('points'), summary: summary, tag: tag,
+        desc: String(C.desc < 0 ? '' : (r[C.desc] || '')).replace(/[‘’]/g, "'").trim(), c1: g('c1'), c2: g('c2') };
+    }).filter(function (x) { return x.name; });
+    return true;
+  }
+
+  function tabOf(id) { return TABS.filter(function (t) { return t.id === id; })[0] || TABS[0]; }
+  function itemsFor(t) { return ITEMS.filter(function (x) { return t.sections.indexOf(x.section) >= 0; }); }
+  function pts(p) {
+    if (!p) return '';
+    if (/^[\d.]+$/.test(p)) return p + (p === '1' ? ' point' : ' points');
+    if (/^[\d.]+\s*(-|or)\s*[\d.]+$/.test(p)) return p.replace(/\s*-\s*/, ' to ').replace(/\s*or\s*/, ' or ') + ' points';
+    return p;
+  }
+
+  // description text -> paragraphs, small headings and bullet lists
+  function descHTML(text, t) {
+    var paras = text.split(/\n\s*\n/);
+    if (t.liftPara) paras = paras.filter(function (p) { return p.trim().indexOf(t.liftPara) !== 0; });
+    var out = '';
+    paras.forEach(function (p) {
+      (t.strip || []).forEach(function (s) { p = p.split(s).join(''); });
+      var lines = p.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      var list = [];
+      var flush = function () { if (list.length) { out += '<ul>' + list.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'; list = []; } };
+      lines.forEach(function (l) {
+        if (/^[•\-*]\s*/.test(l)) list.push(l.replace(/^[•\-*]\s*/, ''));
+        else if (/^[^.]{2,30}:$/.test(l)) { flush(); out += '<h4>' + esc(l.slice(0, -1)) + '</h4>'; }
+        else { flush(); out += '<p>' + esc(l) + '</p>'; }
+      });
+      flush();
+    });
+    return out;
+  }
+
+  function isCmd(c) { return /^\//.test(c); }
+  function cmdHTML(c, label) {
+    if (!c) return '';
+    if (!isCmd(c)) return '<div class="cmd"><span class="lbl">' + esc(label) + '</span><span class="note">' + esc(c) + '</span></div>';
+    return '<div class="cmd"><span class="lbl">' + esc(label) + '</span><code>' + esc(c) + '</code></div>';
+  }
+
+  function renderTabs() {
+    $('tabs').innerHTML = TABS.map(function (t) {
+      return '<a href="#' + t.id + '" data-tab="' + t.id + '" aria-current="' + (t.id === tab) + '">' + esc(t.label) + '<span class="n">' + itemsFor(t).length + '</span></a>';
+    }).join('');
+  }
+
+  function render() {
+    var t = tabOf(tab);
+    renderTabs();
+    var intro = (t.intro || []).slice();
+    if (t.liftPara) {
+      var src = itemsFor(t)[0];
+      var lifted = src && src.desc.split(/\n\s*\n/).filter(function (p) { return p.trim().indexOf(t.liftPara) === 0; })[0];
+      if (lifted) intro.push(lifted.trim());
+    }
+    $('intro').hidden = !intro.length;
+    $('intro').innerHTML = intro.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
+    var term = $('q').value.trim().toLowerCase();
+    var list = itemsFor(t).filter(function (x) { return !term || (x.name + ' ' + x.summary + ' ' + x.desc + ' ' + x.section).toLowerCase().indexOf(term) >= 0; });
+    list.sort(function (a, b) { return t.showGroup ? (az(a.section, b.section) || az(a.name, b.name)) : az(a.name, b.name); });
+    if (!list.length) { $('cards').innerHTML = '<p class="empty">' + (term ? 'Nothing matches that search.' : 'Nothing here yet this era.') + '</p>'; return; }
+    $('cards').innerHTML = list.map(function (x) {
+      var open = x.id === openId;
+      var proj = t.project && (t.project.byGroup ? t.project.byGroup[x.section] : t.project);
+      return '<article class="q' + (open ? ' open' : '') + '" data-id="' + x.id + '">' +
+        '<div class="hd"><div>' + (t.showGroup ? '<p class="group">' + esc(x.section) + '</p>' : '') + '<h3>' + esc(x.name) + '</h3></div>' +
+        (x.points ? '<span class="pts">' + esc(pts(x.points)) + '</span>' : '') + '</div>' +
+        '<p class="sum">' + (x.tag ? '<span class="tag">' + esc(x.tag) + '</span>' : '') + esc(x.summary) + '</p>' +
+        '<div class="acts"><button type="button" data-act="more" aria-expanded="' + open + '">' + (open ? 'Less' : 'Details') + '</button>' +
+        (isCmd(x.c1) ? '<button type="button" data-act="copy" data-c="1">Copy</button>' : '') +
+        (proj ? '<button type="button" data-act="proj">Start project</button>' : '') + '</div>' +
+        (open ? '<div class="more"><div class="desc">' + descHTML(x.desc, t) + '</div>' +
+          cmdHTML(x.c1, x.c2 ? 'Command' : 'Command to submit') +
+          (x.c2 ? cmdHTML(x.c2, 'Or, as a Showcase Build') + '<button type="button" data-act="copy" data-c="2" style="justify-self:start">Copy Showcase command</button>' : '') +
+          (/^https:\/\//.test(x.rules) ? '<a href="' + esc(x.rules) + '" target="_blank" rel="noopener">Read the full rules ↗</a>' : '') + '</div>' : '') +
+        '</article>';
+    }).join('');
+  }
+
+  function find(id) { return ITEMS.filter(function (x) { return x.id === id; })[0]; }
+
+  function startProject(x) {
+    var t = tabOf(tab);
+    var pr = t.project.byGroup ? t.project.byGroup[x.section] : t.project;
+    var d; try { d = JSON.parse(store(KEY) || 'null'); } catch (e) { d = null; }
+    d = d && d.projects ? d : { projects: [], sessions: [], running: null };
+    var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    var fields = {};
+    if (pr.field === 'activity' || pr.field === 'quest') fields[pr.field] = x.name;
+    var paras = x.desc.split(/\n\s*\n/).filter(function (p) { return !t.liftPara || p.trim().indexOf(t.liftPara) !== 0; });
+    var musts = [], story = [];
+    paras.join('\n').split('\n').forEach(function (l) { l = l.trim(); if (!l) return; if (/^[•\-*]\s*/.test(l)) musts.push(l.replace(/^[•\-*]\s*/, '')); else if (!/^[^.]{2,30}:$/.test(l)) story.push(l); });
+    (t.strip || []).forEach(function (s) { story = story.map(function (l) { return l.split(s).join('').trim(); }).filter(Boolean); });
+    d.projects.push({ id: id, name: x.name, type: pr.type, fields: fields, created: Date.now(),
+      brief: { title: t.label + ': ' + x.name, story: story.join('\n'), style: '', musts: musts } });
+    if (store(KEY, JSON.stringify(d)) === null && !store(KEY)) { toast('Could not save. Is this a private window?'); return; }
+    store(KEY + '.sel', id);
+    location.href = 'projects.html';
+  }
+
+  $('cards').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var x = find(b.closest('.q').dataset.id); if (!x) return;
+    if (b.dataset.act === 'more') { openId = openId === x.id ? null : x.id; render(); }
+    else if (b.dataset.act === 'copy') copy(b.dataset.c === '2' ? x.c2 : x.c1, 'Copied. Paste it in Discord and fill in the blanks.');
+    else if (b.dataset.act === 'proj') startProject(x);
+  });
+  $('tabs').addEventListener('click', function (e) {
+    var a = e.target.closest('a'); if (!a) return; e.preventDefault();
+    tab = a.dataset.tab; openId = null; $('q').value = '';
+    try { history.replaceState(null, '', '#' + tab); } catch (x) {}
+    render();
+  });
+  $('q').addEventListener('input', render);
+  window.addEventListener('hashchange', function () { tab = tabOf(location.hash.slice(1)).id; render(); });
+  tab = tabOf(location.hash.slice(1)).id;
+
+  // Show the saved copy right away, then swap in the live sheet
+  var cached = null; try { cached = JSON.parse(store('tbQuests.cache') || 'null'); } catch (e) {}
+  load(cached && cached.rows ? cached.rows : SNAPSHOT);
+  $('status').textContent = 'Loading the latest from the tracker...';
+  render();
+  fetch(CSV_URL, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (txt) {
+    var rows = parseCSV(txt);
+    if (!load(rows)) throw 0;
+    store('tbQuests.cache', JSON.stringify({ rows: rows, at: Date.now() }));
+    $('status').textContent = 'Up to date with the Player Tracker.';
+    render();
+  }).catch(function () {
+    $('status').textContent = 'Could not reach the tracker, showing the last saved copy.';
+  });
+})();
+</script>
+</body>
+</html>
