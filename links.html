@@ -13,7 +13,25 @@
 main.wrap { padding-block: 24px 24px; display: grid; gap: 30px; }
 .jump { display: flex; flex-wrap: wrap; gap: 8px; }
 .jump a { text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); }
-.jump a:hover { border-color: var(--teal); }
+.jump a:hover, .mchips button:hover { border-color: var(--teal); }
+.jump a[aria-current="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+.mchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.mchips button { font-size: 13px; padding: 6px 12px; border-radius: 999px; }
+.mchips button[aria-pressed="true"] { background: color-mix(in srgb, var(--teal) 20%, var(--card)); border-color: var(--teal); }
+[hidden] { display: none !important; }
+a.vid { grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 12px; padding: 8px 14px 8px 8px; }
+a.vid img { width: 112px; aspect-ratio: 16/9; object-fit: cover; display: block; border-radius: 6px; background: var(--code); }
+.suggest { background: color-mix(in srgb, var(--violet) 12%, var(--card)); border: 1px solid var(--line); border-radius: 9px; font-size: 14px; }
+.suggest summary { cursor: pointer; padding: 10px 14px; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.suggest summary::-webkit-details-marker { display: none; }
+.suggest summary span { color: var(--teal); font-weight: 700; text-decoration: underline; }
+.suggest[open] summary span { text-decoration: none; }
+.sform { display: grid; gap: 12px; padding: 4px 14px 14px; max-width: 640px; }
+.sform textarea { font-family: inherit; font-size: 15px; min-height: 70px; }
+.sform .req { color: var(--violet); }
+.sform .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.sform .msg { font-size: 14px; font-weight: 600; margin: 0; }
+.sform .msg.bad { color: #c0504d; }
 section > h2 { margin: 0 0 4px; }
 section > p.lead { margin: 0 0 14px; color: var(--soft); max-width: 62ch; font-size: 14px; }
 h3.group { margin: 18px 0 8px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); }
@@ -48,15 +66,34 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
 </header>
 
 <main class="wrap">
-  <nav class="jump" aria-label="On this page">
-    <a href="#guild">Guild</a>
-    <a href="#guides">Guides</a>
-    <a href="#mods">Mods</a>
-    <a href="#signs">Signs</a>
-    <a href="#youtube">YouTube</a>
+  <nav class="jump" aria-label="Link sections">
+    <a href="#guild" data-tab="guild">Guild</a>
+    <a href="#guides" data-tab="guides">Guides</a>
+    <a href="#mods" data-tab="mods">Mods</a>
+    <a href="#signs" data-tab="signs">Signs</a>
+    <a href="#youtube" data-tab="youtube">YouTube</a>
   </nav>
+  <details class="suggest" id="suggest">
+    <summary>Have a favorite YouTube builder, tutorial video or guide? <span>Tell us about it</span></summary>
+    <form class="sform" id="sform" novalidate>
+      <div class="field"><label for="f-type">What are you sharing? <span class="req">*</span></label>
+        <select id="f-type" required>
+          <option value="">Pick one</option>
+          <option>Guide or website</option>
+          <option>Tutorial video</option>
+          <option>YouTube builder</option>
+          <option>Other</option>
+        </select></div>
+      <div class="field" id="f-other-wrap" hidden><label for="f-other">If you selected 'Other,' tell us what category it falls under.</label><input id="f-other" type="text" maxlength="200"></div>
+      <div class="field"><label for="f-link">Link <span class="req">*</span></label><input id="f-link" type="url" inputmode="url" placeholder="https://" maxlength="500"></div>
+      <div class="field"><label for="f-name">Name of the creator, video or guide.</label><input id="f-name" type="text" maxlength="200"></div>
+      <div class="field"><label for="f-love">What do you love about it?</label><textarea id="f-love" maxlength="2000"></textarea></div>
+      <div class="field"><label for="f-discord">Your Discord name (optional)</label><input id="f-discord" type="text" maxlength="100"></div>
+      <div class="row"><button type="submit" class="primary" id="f-send">Send</button><p class="msg" id="f-msg" role="status"></p></div>
+    </form>
+  </details>
 
-  <section id="guild" aria-labelledby="guild-h">
+  <section class="panel" hidden id="guild" aria-labelledby="guild-h">
     <h2 id="guild-h">Guild</h2>
     <p class="lead">Discord links open in the Discord app if you have it.</p>
     <div class="grid">
@@ -69,19 +106,31 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
     </div>
   </section>
 
-  <section id="guides" aria-labelledby="guides-h">
+  <section class="panel" hidden id="guides" aria-labelledby="guides-h">
     <h2 id="guides-h">Guides</h2>
-    <p class="lead">Guides picked by the guild. More are on the way.</p>
+    <p class="lead">Guides and videos picked by the guild.</p>
+    <h3 class="group">Written guides</h3>
     <div class="grid">
       <a class="lk" href="https://docs.google.com/document/d/1En0iaKCXlcJ0d1qym_eztkjX_LKLfLn_s_6hyGudJhQ/edit" target="_blank" rel="noopener"><b>Everything Signs <span>Doc ↗</span></b><small>Every sign tag explained, with examples. From Anathema.</small></a>
     </div>
+    <h3 class="group">Building tips and tutorials</h3>
+    <div class="grid">
+      <a class="lk vid" href="https://www.youtube.com/watch?v=RXURY1Cy_og" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/RXURY1Cy_og/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 1 <span>YouTube ↗</span></b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=KfPkdYuLTFY" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/KfPkdYuLTFY/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 2 <span>YouTube ↗</span></b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=A0z1zNP8b84" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/A0z1zNP8b84/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 3 <span>YouTube ↗</span></b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=_vzb_J99qL0" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/_vzb_J99qL0/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 4 <span>YouTube ↗</span></b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=8-Kj8ZFuoXk" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/8-Kj8ZFuoXk/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 5 <span>YouTube ↗</span></b></a>
+      <a class="lk vid" href="https://www.youtube.com/watch?v=zOgHtpo_Kzc" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/zOgHtpo_Kzc/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>Video 6 <span>YouTube ↗</span></b></a>
+    </div>
   </section>
 
-  <section id="mods" aria-labelledby="mods-h">
+  <section class="panel" hidden id="mods" aria-labelledby="mods-h">
     <h2 id="mods-h">Mods for builders</h2>
     <p class="lead">All of these are approved on Comfy. Links open a search on the mod site so you always land on the newest version.</p>
-    <p class="note"><b>Tip:</b> a mod manager like r2modman makes installing and updating these a lot easier.</p>
+    <div class="mchips" role="group" aria-label="Mod groups"><button type="button" data-g="build" aria-pressed="false">Building tools</button><button type="button" data-g="color" aria-pressed="false">Color</button><button type="button" data-g="guild" aria-pressed="false">Guild work</button><button type="button" data-g="more" aria-pressed="false">More to build with</button><button type="button" data-g="plan" aria-pressed="false">Planning</button></div>
+    <p class="note"><b>Tip:</b> a mod manager like r2modman, Thunderstore, or Gale makes installing and updating these a lot easier.</p>
 
+    <div class="mgroup" data-g="build" hidden>
     <h3 class="group">Building tools</h3>
     <div class="grid">
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=ChestSnap" target="_blank" rel="noopener"><b>ChestSnap <span>Thunderstore ↗</span></b><small>Adds snap points to chests.</small></a>
@@ -95,7 +144,9 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=StructurallyImpossible" target="_blank" rel="noopener"><b>StructurallyImpossible <span>Thunderstore ↗</span></b><small>Pieces you place ignore stability for good.</small><em>Needs Unstrippable to work.</em></a>
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=Unstrippable" target="_blank" rel="noopener"><b>Unstrippable <span>Thunderstore ↗</span></b><small>Keeps the extra data some mods save on pieces. StructurallyImpossible needs it.</small></a>
     </div>
+    </div>
 
+    <div class="mgroup" data-g="color" hidden>
     <h3 class="group">Color and finishing touches</h3>
     <div class="grid">
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=ColorfulLights" target="_blank" rel="noopener"><b>ColorfulLights <span>Thunderstore ↗</span></b><small>Color torches, fire pits, hearths and bonfires.</small></a>
@@ -105,12 +156,16 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=ComfySigns" target="_blank" rel="noopener"><b>ComfySigns <span>Thunderstore ↗</span></b><small>White sign text by default, font choices, and room for way more text.</small></a>
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=TorchesAndResin" target="_blank" rel="noopener"><b>TorchesAndResin <span>Thunderstore ↗</span></b><small>Torches start full and stay lit.</small></a>
     </div>
+    </div>
 
+    <div class="mgroup" data-g="guild" hidden>
     <h3 class="group">Guild work</h3>
     <div class="grid">
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=Passward" target="_blank" rel="noopener"><b>PassWard <span>Thunderstore ↗</span></b><small>Needed to get into BW boards and boss huts.</small><em>Remove the old 1.0.0 from BruceMods if you still have it.</em></a>
     </div>
+    </div>
 
+    <div class="mgroup" data-g="more" hidden>
     <h3 class="group">More to build with</h3>
     <div class="grid">
       <a class="lk" href="https://www.nexusmods.com/valheim/search/?gsearch=Item+Stand+All+Items&amp;gsearchtype=mods" target="_blank" rel="noopener"><b>Item Stand All Items <span>Nexus ↗</span></b><small>Put almost any item on an item stand.</small></a>
@@ -119,15 +174,18 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=PotteryBarn" target="_blank" rel="noopener"><b>PotteryBarn <span>Thunderstore ↗</span></b><small>Extra pieces in the hammer, like big floors and marble pieces.</small></a>
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=SkyTree" target="_blank" rel="noopener"><b>SkyTree <span>Thunderstore ↗</span></b><small>Walk and build on Yggdrasil.</small><em>You still need a way up there.</em></a>
     </div>
+    </div>
 
+    <div class="mgroup" data-g="plan" hidden>
     <h3 class="group">Planning and checking</h3>
     <div class="grid">
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=Hygge" target="_blank" rel="noopener"><b>Hygge <span>Thunderstore ↗</span></b><small>Shows comfort values in the build menu.</small></a>
       <a class="lk" href="https://thunderstore.io/c/valheim/?q=ZoneScouter" target="_blank" rel="noopener"><b>ZoneScouter <span>Thunderstore ↗</span></b><small>Shows sector borders and instance counts.</small></a>
     </div>
+    </div>
   </section>
 
-  <section id="signs" aria-labelledby="signs-h">
+  <section class="panel" hidden id="signs" aria-labelledby="signs-h">
     <h2 id="signs-h">Sign helpers</h2>
     <p class="lead">For when you want to go past the <a href="signs.html">Signs</a> page.</p>
     <div class="grid">
@@ -138,24 +196,83 @@ a.lk em { font-style: normal; font-size: 12px; color: var(--violet); font-weight
     </div>
   </section>
 
-  <section id="youtube" aria-labelledby="yt-h">
+  <section class="panel" hidden id="youtube" aria-labelledby="yt-h">
     <h2 id="yt-h">Builders on YouTube</h2>
     <p class="lead">Grab a snack and steal some ideas.</p>
     <h3 class="group">Guild favorites</h3>
     <div class="grid">
-      <a class="lk" href="https://www.youtube.com/@Chiselchip" target="_blank" rel="noopener"><b>Chiselchip <span>YouTube ↗</span></b><small>Valheim builds.</small></a>
-      <a class="lk" href="https://www.youtube.com/@KyleAxington" target="_blank" rel="noopener"><b>Kyle Axington <span>YouTube ↗</span></b><small>Valheim builds.</small></a>
-      <a class="lk" href="https://www.youtube.com/@smittysurvival" target="_blank" rel="noopener"><b>Smitty Survival <span>YouTube ↗</span></b><small>Valheim builds and building tips.</small></a>
-      <a class="lk" href="https://www.youtube.com/@The-B-Side" target="_blank" rel="noopener"><b>The B-Side <span>YouTube ↗</span></b><small>Valheim builds.</small></a>
-      <a class="lk" href="https://www.youtube.com/@Versaugh" target="_blank" rel="noopener"><b>Versaugh <span>YouTube ↗</span></b><small>Valheim builds.</small></a>
+      <a class="lk" href="https://www.youtube.com/@Chiselchip" target="_blank" rel="noopener"><b>@Chiselchip <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@KyleAxington" target="_blank" rel="noopener"><b>@KyleAxington <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@smittysurvival" target="_blank" rel="noopener"><b>@smittysurvival <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@TheBasicBuilder" target="_blank" rel="noopener"><b>@TheBasicBuilder <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@The-B-Side" target="_blank" rel="noopener"><b>@The-B-Side <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@Versaugh" target="_blank" rel="noopener"><b>@Versaugh <span>YouTube ↗</span></b></a>
     </div>
     <h3 class="group">More to check out</h3>
     <div class="grid">
-      <a class="lk" href="https://www.youtube.com/results?search_query=Mythic+Builds+Valheim" target="_blank" rel="noopener"><b>Mythic Builds <span>YouTube ↗</span></b><small>Tiny homes, longhouses, cave outposts and fortresses, vanilla and modded.</small></a>
-      <a class="lk" href="https://www.youtube.com/c/NickRawcliffe/videos" target="_blank" rel="noopener"><b>Nick Rawcliffe <span>YouTube ↗</span></b><small>Valheim building videos and guides.</small></a>
+      <a class="lk" href="https://www.youtube.com/@CaptainCrumbs" target="_blank" rel="noopener"><b>@CaptainCrumbs <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@Firespark81/playlists" target="_blank" rel="noopener"><b>@Firespark81 <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@mythicbuilds2951" target="_blank" rel="noopener"><b>@mythicbuilds2951 <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/c/NickRawcliffe/videos" target="_blank" rel="noopener"><b>@NickRawcliffe <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@quicksandriggs" target="_blank" rel="noopener"><b>@quicksandriggs <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@sarah4and10" target="_blank" rel="noopener"><b>@sarah4and10 <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@splashopain" target="_blank" rel="noopener"><b>@splashopain <span>YouTube ↗</span></b></a>
+      <a class="lk" href="https://www.youtube.com/@tacogxp" target="_blank" rel="noopener"><b>@tacogxp <span>YouTube ↗</span></b></a>
     </div>
   </section>
 </main>
 <footer class="wrap site">Made for the Comfy Valheim Builders Guild. Discord links open in the Discord app if you have it.</footer>
+<script>
+(function () {
+  var tabs = ['guild','guides','mods','signs','youtube'];
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function show(t) {
+    if (tabs.indexOf(t) < 0) t = 'guild';
+    tabs.forEach(function (x) { document.getElementById(x).hidden = x !== t; });
+    document.querySelectorAll('.jump a').forEach(function (a) { a.setAttribute('aria-current', a.dataset.tab === t ? 'true' : 'false'); });
+  }
+  function group(g) {
+    var all = Array.prototype.map.call(document.querySelectorAll('.mgroup'), function (d) { return d.dataset.g; });
+    if (all.indexOf(g) < 0) g = all[0];
+    document.querySelectorAll('.mgroup').forEach(function (d) { d.hidden = d.dataset.g !== g; });
+    document.querySelectorAll('.mchips button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.g === g ? 'true' : 'false'); });
+    store('tbLinksGroup', g);
+  }
+  document.querySelectorAll('.jump a').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); try { history.replaceState(null, '', '#' + a.dataset.tab); } catch (x) {} show(a.dataset.tab); }); });
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+  document.querySelectorAll('.mchips button').forEach(function (b) { b.addEventListener('click', function () { group(b.dataset.g); }); });
+  show(location.hash.slice(1)); group(store('tbLinksGroup'));
+})();
+</script>
+<script>
+(function () {
+  var FORM = 'https://docs.google.com/forms/d/e/1FAIpQLScyfH4rtrTLh1Jh8oTNJ-Ey-cWXycfeKhkNe_7neEtfw2SEjA/formResponse';
+  var F = { type: 'entry.584818214', other: 'entry.1290004907', link: 'entry.1487015727', name: 'entry.486263460', love: 'entry.970529089', discord: 'entry.151254364' };
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $('sform'), msg = $('f-msg'), send = $('f-send');
+  $('f-type').addEventListener('change', function () { $('f-other-wrap').hidden = this.value !== 'Other'; });
+  function say(t, bad) { msg.textContent = t; msg.className = 'msg' + (bad ? ' bad' : ''); }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var type = $('f-type').value, link = $('f-link').value.trim();
+    if (!type) { say('Pick what you are sharing.', true); $('f-type').focus(); return; }
+    if (!/^https?:\/\/\S+\.\S+/i.test(link)) { say('Paste the full link, starting with https://', true); $('f-link').focus(); return; }
+    var data = new URLSearchParams();
+    data.append(F.type, type);
+    if (type === 'Other') data.append(F.other, $('f-other').value.trim());
+    data.append(F.link, link);
+    data.append(F.name, $('f-name').value.trim());
+    data.append(F.love, $('f-love').value.trim());
+    data.append(F.discord, $('f-discord').value.trim());
+    send.disabled = true; say('Sending...');
+    fetch(FORM, { method: 'POST', mode: 'no-cors', body: data }).then(function () {
+      form.reset(); $('f-other-wrap').hidden = true;
+      say('Thanks! We got it. Feel free to send another.');
+    }, function () {
+      say('That did not go through. Check your connection and try again.', true);
+    }).then(function () { send.disabled = false; });
+  });
+})();
+</script>
 </body>
 </html>
