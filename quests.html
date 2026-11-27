@@ -80,7 +80,7 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
 (function () {
   // ================= EDIT THIS PART =================
   // The "Earning Points Data" tab, published to the web as CSV
-  var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ0pGSFpWaCp97TKZ8mh26bALm-CL-60fqg5eCPIbjc8WV_bH9tBm7IPzVKseOWDv0YXbnvum9RMtg/pub?gid=1188165432&single=true&output=csv';
+  var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ0pGSFpWaCp97TKZ8mh26bALm-CL-60fqg5eCPIbjc8WV_bH9tBm7IPzVKseOWDv0YXbnvum9RMtg/pub?gid=355181486&single=true&output=csv';
   // Tabs on this page (A to Z) and which Section names from the sheet go in each
   // The hidden "Bootcamp Data" tab, published to the web as CSV. Leave '' until it's published.
   var BOOTCAMP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ0pGSFpWaCp97TKZ8mh26bALm-CL-60fqg5eCPIbjc8WV_bH9tBm7IPzVKseOWDv0YXbnvum9RMtg/pub?gid=532734193&single=true&output=csv';
@@ -327,7 +327,7 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
   render();
   fetch(CSV_URL, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (txt) {
     var rows = parseCSV(txt);
-    if (!load(rows)) throw 0;
+    if (!load(rows)) { $('status').textContent = 'The tracker link is not pointing at the Earning Points Data tab. Showing the last saved copy.'; load(cached && cached.rows ? cached.rows : SNAPSHOT); render(); return; }
     store('tbQuests.cache', JSON.stringify({ rows: rows, at: Date.now() }));
     $('status').textContent = 'Up to date with the Player Tracker.';
     render();
