@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Signs · Builders Toolbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="timer-badge.js" defer></script>
+<style>
+/* Layout: a tab row for the four sign tools, each tool = inputs on the left, sign preview + copy on the right */
+main.wrap { padding-block: 22px 32px; display: grid; gap: 18px; }
+.subtabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.subtabs a { text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); }
+.subtabs a[aria-current="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+.tool { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .tool { grid-template-columns: minmax(0, 1fr); } }
+.bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.bar button { padding: 6px 11px; font-size: 13px; }
+.bar input[type="color"] { width: 40px; height: 34px; padding: 2px; }
+.bar input[type="number"] { width: 72px; padding: 6px 8px; }
+textarea.txt { min-height: 120px; font-family: var(--f-mono); font-size: 14px; }
+.sign { --wood: #6b4a2b; --wood2: #57391f; border-radius: 8px; padding: 18px; min-height: 150px; overflow: auto;
+  background: repeating-linear-gradient(0deg, var(--wood) 0 22px, var(--wood2) 22px 24px); box-shadow: inset 0 0 0 4px #3d2814; }
+.sign .face { color: #fff; font-family: "Norse", Georgia, "Times New Roman", serif; font-size: 22px; line-height: 1.25; text-align: center; overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+.count { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.count span { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 10px; background: var(--chip); }
+.count .ok { color: var(--ok); } .count .bad { color: var(--stop); }
+.out { font-family: var(--f-mono); font-size: 12px; background: var(--code); border: 1px solid var(--line); border-radius: 7px; padding: 10px; overflow-wrap: anywhere; white-space: pre-wrap; max-height: 220px; overflow-y: auto; }
+.stops { display: grid; gap: 8px; }
+.stop { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.stop input[type="color"] { width: 44px; height: 38px; padding: 2px; }
+.swatch { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.swatch i { flex: 1; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lnk { display: grid; gap: 6px; }
+.credit { font-size: 12px; color: var(--soft); }
+a.btnlink { display: inline-block; text-decoration: none; font-weight: 700; font-size: 14px; padding: 9px 14px; border-radius: 8px; background: var(--teal); color: #fff; }
+svg.curve { width: 100%; height: auto; display: block; }
+.rowtbl { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.rowtbl th, .rowtbl td { padding: 4px 6px; border-top: 1px solid var(--line); text-align: right; }
+.rowtbl th:first-child, .rowtbl td:first-child { text-align: center; }
+.tblwrap { overflow-x: auto; max-height: 260px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Builders Toolbox</p>
+      <h1>SIGNS</h1>
+    </div>
+    <p class="tagline">Color, style and curve your sign text, then copy it straight onto a sign.</p>
+  </div>
+  <nav class="tabs" aria-label="Toolbox"><div class="wrap">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="signs.html" aria-current="page">Signs</a>
+    <a href="index.html#blueprints">Odin's Blueprints</a>
+    <a href="index.html#links">Links &amp; Guides</a>
+  </div></nav>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+  <nav class="subtabs" aria-label="Sign tools">
+    <a href="#curved" data-tab="curved">Curved text</a>
+    <a href="#gradient" data-tab="gradient">Gradient</a>
+    <a href="#pictures" data-tab="pictures">Picture signs</a>
+    <a href="#studio" data-tab="studio">Text studio</a>
+  </nav>
+
+  <!-- TEXT STUDIO -->
+  <section id="t-studio" class="tool" hidden>
+    <div class="card fields">
+      <h2 style="margin:0">Text studio</h2>
+      <div class="field"><label for="s-in">Sign text</label>
+        <textarea id="s-in" class="txt" spellcheck="false" placeholder="Welcome to the Drafting Table"></textarea></div>
+      <div>
+        <label>Highlight some text, then pick a style</label>
+        <div class="bar">
+          <input id="s-col" type="color" value="#ffd166" aria-label="Color">
+          <button type="button" data-wrap="color">Color</button>
+          <button type="button" data-wrap="b"><b>B</b></button>
+          <button type="button" data-wrap="i"><i>I</i></button>
+          <button type="button" data-wrap="u"><u>U</u></button>
+          <button type="button" data-wrap="s"><s>S</s></button>
+          <input id="s-size" type="number" min="1" max="200" value="30" aria-label="Size">
+          <button type="button" data-wrap="size">Size</button>
+          <button type="button" data-wrap="br">New line</button>
+          <button type="button" data-wrap="party">Party</button>
+        </div>
+      </div>
+      <p class="small muted" style="margin:0">A new line in the box becomes &lt;br&gt; on the sign. Party mode only shows for players who turned it on in ComfySigns.</p>
+    </div>
+    <div class="card fields">
+      <h2 style="margin:0">Preview</h2>
+      <div class="sign"><div class="face" id="s-prev"></div></div>
+      <div class="count" id="s-count"></div>
+      <div class="out" id="s-out"></div>
+      <div class="btns"><button type="button" class="primary" data-copy="s-out">Copy sign text</button><button type="button" class="ghost" id="s-clear">Clear</button></div>
+    </div>
+  </section>
+
+  <!-- GRADIENT -->
+  <section id="t-gradient" class="tool" hidden>
+    <div class="card fields">
+      <h2 style="margin:0">Gradient</h2>
+      <div class="field"><label for="g-in">Text</label><input id="g-in" type="text" maxlength="200" value="Builders Guild"></div>
+      <div>
+        <label>Colors (left to right)</label>
+        <div class="stops" id="g-stops"></div>
+        <div class="btns" style="margin-top:8px"><button type="button" id="g-add">+ Add color</button><button type="button" class="ghost" id="g-flip">Flip</button></div>
+      </div>
+      <div class="swatch" id="g-sw" aria-hidden="true"></div>
+      <div class="row2">
+        <div class="field"><label for="g-mode">Fade across</label>
+          <select id="g-mode"><option value="letters">Every letter</option><option value="words">Every word</option></select></div>
+        <div class="field"><label for="g-tag">Color tag</label>
+          <select id="g-tag"><option value="short">Short &lt;#hex&gt;…&lt;/color&gt; (fits more)</option><option value="long">Long &lt;color=#hex&gt;…&lt;/color&gt;</option></select></div>
+      </div>
+      <p class="small muted" style="margin:0">Every color is closed with &lt;/color&gt; so it doesn't bleed. Spaces don't get a color, so they don't use up characters.</p>
+    </div>
+    <div class="card fields">
+      <h2 style="margin:0">Preview</h2>
+      <div class="sign"><div class="face" id="g-prev"></div></div>
+      <div class="count" id="g-count"></div>
+      <div class="out" id="g-out"></div>
+      <div class="btns"><button type="button" class="primary" data-copy="g-out">Copy sign text</button><button type="button" id="g-send">Use in Text studio</button></div>
+    </div>
+  </section>
+
+  <!-- CURVED TEXT -->
+  <section id="t-curved" class="tool" hidden>
+    <div class="card fields">
+      <h2 style="margin:0">Curved text</h2>
+      <div class="field"><label for="c-in">Text (up to 18 letters, spaces count)</label><input id="c-in" type="text" maxlength="18" value="Kitchen"></div>
+      <div class="grid3">
+        <div class="field"><label for="c-size">Letter size</label><input id="c-size" type="number" min="1" max="100" step="1" value="18"></div>
+        <div class="field"><label for="c-step">Degrees per letter</label><input id="c-step" type="number" min="1" max="20" step="0.5" value="6"></div>
+        <div class="field"><label for="c-curve">Angle curve</label><input id="c-curve" type="number" min="180" max="1000" step="1" value="300"></div>
+        <div class="field"><label for="c-base">Starting indent</label><input id="c-base" type="number" step="1" value="-120"></div>
+        <div class="field"><label for="c-lh">Line height</label><input id="c-lh" type="number" min="1" max="100" step="1" value="10"></div>
+        <div class="field"><label for="c-colmode">Color</label>
+          <select id="c-colmode"><option value="none">No color</option><option value="one">One color</option><option value="grad">Gradient colors</option></select></div>
+      </div>
+      <div class="bar" id="c-colbar" hidden><input id="c-col" type="color" value="#45eefc" aria-label="Color"><span class="small muted">The gradient option uses the colors from the Gradient tab.</span></div>
+      <p class="small muted" style="margin:0">Keep the angle curve at 180 or higher. Odd and even letter counts are centered for you.</p>
+    </div>
+    <div class="card fields">
+      <h2 style="margin:0">Preview</h2>
+      <div class="sign" style="padding:8px"><svg class="curve" id="c-svg" role="img" aria-label="Rough preview of the curved letters"></svg></div>
+      <p class="small muted" style="margin:0">A rough look at where each letter lands. Check it on a sign in game.</p>
+      <div class="count" id="c-count"></div>
+      <div class="out" id="c-out"></div>
+      <div class="btns"><button type="button" class="primary" data-copy="c-out">Copy sign text</button></div>
+      <details><summary>Letter by letter</summary><div class="tblwrap" style="margin-top:8px"><table class="rowtbl" id="c-tbl"></table></div></details>
+    </div>
+  </section>
+
+  <!-- PICTURE SIGNS -->
+  <section id="t-pictures" hidden>
+    <div class="card fields" style="max-width:720px">
+      <h2 style="margin:0">Picture signs</h2>
+      <p style="margin:0">Turn a picture into sign art with Kyris's Comfy Sign Builder. It opens in a new tab.</p>
+      <div class="btns"><a class="btnlink" href="https://enjerutantei.github.io/ComfySignBuilder/" target="_blank" rel="noopener">Open the Comfy Sign Builder ↗</a></div>
+      <p class="credit" style="margin:0">Made by Kyris.</p>
+    </div>
+  </section>
+
+  <p class="credit">Curved text uses Anathema's Curved Signs Calculator (based on MadMonkeh's table). Thanks to Tanagor for the gradient idea.</p>
+</main>
+<footer class="wrap site">Sign limits: 50 characters on vanilla signs, 999 with the ComfySigns mod. Tags count toward the limit.</footer>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'buildersToolbox.signs';
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pref(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(KEY) || '{}'); localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} return {}; }
+  var tt; function toast(m) { var el = $('toast'); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2400); }
+  function copy(text, done) {
+    var fb = function () { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); toast(ok ? done : 'Select the text and copy it by hand.'); };
+    try { navigator.clipboard.writeText(text).then(function () { toast(done); }, fb); } catch (e) { fb(); }
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest('[data-copy]'); if (b) copy($(b.dataset.copy).textContent, 'Copied. Paste it into the sign.'); });
+
+  // ---------- counter: 50 vanilla, 999 ComfySigns ----------
+  function counter(el, text) {
+    var n = text.length;
+    $(el).innerHTML = '<span>' + n + ' characters</span>' +
+      '<span class="' + (n <= 50 ? 'ok' : 'bad') + '">' + (n <= 50 ? '✔ fits a vanilla sign (50)' : 'Too long for vanilla (50)') + '</span>' +
+      '<span class="' + (n <= 999 ? 'ok' : 'bad') + '">' + (n <= 999 ? '✔ fits with ComfySigns (999)' : 'Too long even with ComfySigns (999)') + '</span>';
+  }
+
+  // ---------- preview: turns sign tags into styled text (rough) ----------
+  function render(text) {
+    var html = '', open = [], parts = String(text).split(/(<[^>]*>)/);
+    parts.forEach(function (p) {
+      if (!p) return;
+      var m;
+      if (p.charAt(0) !== '<' || p.length < 3) { html += esc(p); return; }
+      var t = p.slice(1, -1).trim(), low = t.toLowerCase();
+      if (low === 'br') { html += '<br>'; return; }
+      if ((m = t.match(/^(?:color=)?["']?(#[0-9a-f]{3,8})["']?$/i))) { html += '<span style="color:' + esc(m[1]) + '">'; open.push('span'); return; }
+      if ((m = low.match(/^size=["']?(\d+(?:\.\d+)?)(%|px|em)?["']?$/))) { var v = m[2] === '%' ? m[1] + '%' : m[2] === 'em' ? m[1] + 'em' : Math.min(160, Number(m[1]) * 0.75) + 'px'; html += '<span style="font-size:' + v + '">'; open.push('span'); return; }
+      if (['b', 'i', 'u', 's'].indexOf(low) !== -1) { html += '<' + low + '>'; open.push(low); return; }
+      if (low === 'link=party') { html += '<span style="background:linear-gradient(90deg,#ff6b6b,#ffd166,#6ee7a8,#60b0ca,#c2a9f5);-webkit-background-clip:text;background-clip:text;color:transparent">'; open.push('span'); return; }
+      if (low.charAt(0) === '/') { var want = low.slice(1); if (want === 'color' || want === 'size' || want === 'link') want = 'span'; var i = open.lastIndexOf(want); if (i !== -1) { for (var k = open.length - 1; k >= i; k--) html += '</' + open[k] + '>'; open.length = i; } return; }
+      // other tags (indent, rotate, line-height...) don't show in this preview
+    });
+    for (var k = open.length - 1; k >= 0; k--) html += '</' + open[k] + '>';
+    return html;
+  }
+
+  // ---------- tabs ----------
+  var TABS = ['curved', 'gradient', 'pictures', 'studio'];
+  function showTab() {
+    var h = location.hash.replace('#', ''); if (TABS.indexOf(h) === -1) h = 'studio';
+    TABS.forEach(function (t) { $('t-' + t).hidden = t !== h; });
+    document.querySelectorAll('.subtabs a').forEach(function (a) { a.setAttribute('aria-current', a.dataset.tab === h ? 'true' : 'false'); });
+  }
+  window.addEventListener('hashchange', showTab);
+
+  // ---------- TEXT STUDIO ----------
+  var sIn = $('s-in');
+  function studioOut() { return sIn.value.replace(/\r?\n/g, '<br>'); }
+  function drawStudio() {
+    var out = studioOut();
+    $('s-out').textContent = out || ' ';
+    $('s-prev').innerHTML = out ? render(out) : '<span style="opacity:.5">Your sign text shows here</span>';
+    counter('s-count', out);
+    var P = pref(); P.studio = sIn.value; pref(P);
+  }
+  function wrapSel(before, after) {
+    var a = sIn.selectionStart, b = sIn.selectionEnd, v = sIn.value;
+    sIn.value = v.slice(0, a) + before + v.slice(a, b) + after + v.slice(b);
+    sIn.focus(); sIn.selectionStart = a + before.length; sIn.selectionEnd = b + before.length;
+    drawStudio();
+  }
+  document.querySelector('#t-studio .bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var w = b.dataset.wrap;
+    if (w === 'color') wrapSel('<' + $('s-col').value.toUpperCase() + '>', '</color>');
+    else if (w === 'size') wrapSel('<size=' + Math.max(1, Number($('s-size').value) || 30) + '>', '</size>');
+    else if (w === 'br') wrapSel('<br>', '');
+    else if (w === 'party') wrapSel('<link=party>', '</link>');
+    else wrapSel('<' + w + '>', '</' + w + '>');
+  });
+  sIn.addEventListener('input', drawStudio);
+  $('s-clear').addEventListener('click', function () { sIn.value = ''; drawStudio(); sIn.focus(); });
+
+  // ---------- GRADIENT ----------
+  var stops = ['#D8A8FF', '#45B2BF'];
+  function hex2rgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join(''); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function rgb2hex(c) { return '#' + c.map(function (v) { return Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0'); }).join('').toUpperCase(); }
+  // n colors spread evenly across the stops
+  function spread(n, list) {
+    list = list || stops;
+    if (n <= 0) return []; if (n === 1) return [list[0].toUpperCase()];
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var t = i / (n - 1) * (list.length - 1), k = Math.min(list.length - 2, Math.floor(t)), f = t - k;
+      var a = hex2rgb(list[k]), b = hex2rgb(list[k + 1]);
+      out.push(rgb2hex([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]));
+    }
+    return out;
+  }
+  function gradientText(text) {
+    // Every color is closed with </color> (unclosed colors bleed and cause lag in game)
+    var short = $('g-tag').value === 'short', tag = function (c, t) { return (short ? '<' + c + '>' : '<color=' + c + '>') + t + '</color>'; };
+    if ($('g-mode').value === 'words') {
+      var words = text.split(/(\s+)/), real = words.filter(function (w) { return w && !/^\s+$/.test(w); }), cols = spread(real.length), j = 0;
+      return words.map(function (w) { return (!w || /^\s+$/.test(w)) ? w : tag(cols[j++], w); }).join('');
+    }
+    // letters next to each other with the same color share one tag
+    var chars = Array.from(text), count = chars.filter(function (c) { return !/\s/.test(c); }).length, cols2 = spread(count), i = 0, out = '', run = '', runCol = '';
+    var flush = function () { if (run) out += tag(runCol, run); run = ''; };
+    chars.forEach(function (c) { if (/\s/.test(c)) { flush(); out += c; return; } var col = cols2[i++]; if (col !== runCol) { flush(); runCol = col; } run += c; });
+    flush(); return out;
+  }
+  function drawStops() {
+    $('g-stops').innerHTML = stops.map(function (c, i) {
+      return '<div class="stop"><input type="color" value="' + c.toLowerCase() + '" data-i="' + i + '" aria-label="Color ' + (i + 1) + '"><input type="text" value="' + c + '" data-hex="' + i + '" maxlength="7" aria-label="Hex code ' + (i + 1) + '">' +
+        (stops.length > 2 ? '<button type="button" class="ghost danger" data-rm="' + i + '" aria-label="Remove color">✕</button>' : '<span></span>') + '</div>';
+    }).join('');
+  }
+  function drawGradient() {
+    var text = $('g-in').value, out = gradientText(text);
+    $('g-sw').innerHTML = spread(24).map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('');
+    $('g-out').textContent = out || ' ';
+    $('g-prev').innerHTML = out ? render(out) : '<span style="opacity:.5">Type some text</span>';
+    counter('g-count', out);
+    var P = pref(); P.stops = stops; P.gtext = text; pref(P);
+    drawCurve();
+  }
+  $('g-stops').addEventListener('input', function (e) {
+    var i = e.target.dataset.i, h = e.target.dataset.hex;
+    if (i !== undefined) { stops[i] = e.target.value.toUpperCase(); var t = document.querySelector('[data-hex="' + i + '"]'); if (t) t.value = stops[i]; drawGradient(); }
+    if (h !== undefined && /^#?[0-9a-f]{6}$/i.test(e.target.value.trim())) { stops[h] = ('#' + e.target.value.trim().replace('#', '')).toUpperCase(); var c = document.querySelector('[data-i="' + h + '"]'); if (c) c.value = stops[h].toLowerCase(); drawGradient(); }
+  });
+  $('g-stops').addEventListener('click', function (e) { var b = e.target.closest('[data-rm]'); if (!b) return; stops.splice(Number(b.dataset.rm), 1); drawStops(); drawGradient(); });
+  $('g-add').addEventListener('click', function () { if (stops.length >= 6) { toast('Up to 6 colors'); return; } stops.push(stops[stops.length - 1]); drawStops(); drawGradient(); });
+  $('g-flip').addEventListener('click', function () { stops.reverse(); drawStops(); drawGradient(); });
+  ['g-in', 'g-mode', 'g-tag'].forEach(function (id) { $(id).addEventListener('input', drawGradient); $(id).addEventListener('change', drawGradient); });
+  $('g-send').addEventListener('click', function () { sIn.value = gradientText($('g-in').value); location.hash = 'studio'; drawStudio(); toast('Sent to Text studio'); });
+
+  // ---------- CURVED TEXT (Anathema's calculator) ----------
+  // Each letter sits on its own line. For the letter at position p (0 = middle):
+  //   degrees = degrees per letter x p,  indent = starting indent + angle curve x cos(degrees),  rotate = -90 - degrees
+  // Odd counts: positions -8..8 with the middle letter at 0. Even counts: -8..-1, 0, 0, 1..8 (two middle letters at 0).
+  function curveRows() {
+    var text = Array.from($('c-in').value), n = text.length, even = n % 2 === 0;
+    var pos = []; for (var p = -8; p <= 8; p++) { pos.push(p); if (even && p === 0) pos.push(0); }
+    var mid = even ? 9 : 8, start = even ? mid - n / 2 : mid - (n - 1) / 2;
+    var step = Number($('c-step').value) || 6, R = Number($('c-curve').value) || 300, base = Number($('c-base').value) || 0, size = Number($('c-size').value) || 18;
+    var mode = $('c-colmode').value, cols = mode === 'grad' ? spread(n) : [];
+    return pos.map(function (p, idx) {
+      var deg = step * p, letter = idx >= start && idx < start + n ? text[idx - start] : null;
+      return { p: p, letter: letter, deg: deg, indent: Math.round((base + R * Math.cos(deg * Math.PI / 180)) * 10) / 10, rot: -90 - deg, size: size,
+        color: (letter === null || letter === ' ') ? '' : mode === 'one' ? $('c-col').value.toUpperCase() : mode === 'grad' ? cols[idx - start] : '' };
+    });
+  }
+  function drawCurve() {
+    if (!$('c-in')) return;
+    $('c-colbar').hidden = $('c-colmode').value !== 'one';
+    var rows = curveRows(), lh = Number($('c-lh').value) || 10, last = rows.length - 1, prevSize = null;
+    var out = '<line-height=' + lh + '>' + rows.map(function (r, i) {
+      if (r.letter === null) return (i === 0 || i === last) ? '' : '<br>';
+      var s = (prevSize === r.size ? '' : '<size=' + r.size + '>') + '<indent=' + r.indent + '><rotate=' + r.rot + '>' + (r.color ? '<' + r.color + '>' : '') + '<br>' + r.letter + (r.color ? '</color>' : '');
+      prevSize = r.size; return s;
+    }).join('');
+    $('c-out').textContent = out; counter('c-count', out);
+    // rough picture: line i is lower down by the line height, pushed right by its indent, letter turned by its rotation
+    var used = rows.filter(function (r) { return r.letter !== null; });
+    var xs = used.map(function (r) { return r.indent; }), minX = Math.min.apply(null, xs.concat([0])) - 30, maxX = Math.max.apply(null, xs.concat([0])) + 30;
+    var H = (rows.length + 2) * lh + 30, W = Math.max(120, maxX - minX);
+    $('c-svg').setAttribute('viewBox', minX + ' -10 ' + W + ' ' + H);
+    $('c-svg').innerHTML = rows.map(function (r, i) {
+      if (r.letter === null || r.letter === ' ') return '';
+      var x = r.indent, y = (i + 1) * lh;
+      return '<text x="' + x + '" y="' + y + '" font-size="' + (r.size * 0.9) + '" fill="' + (r.color || '#ffffff') + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(' + (-r.rot) + ' ' + x + ' ' + y + ')" style="font-family:Georgia,serif;font-weight:700">' + esc(r.letter) + '</text>';
+    }).join('');
+    $('c-tbl').innerHTML = '<tr><th>Letter</th><th>Degrees</th><th>Indent</th><th>Rotate</th></tr>' + used.map(function (r) {
+      return '<tr><td>' + (r.letter === ' ' ? '(space)' : esc(r.letter)) + '</td><td>' + r.deg + '</td><td>' + r.indent + '</td><td>' + r.rot + '</td></tr>';
+    }).join('');
+    var P = pref(); P.curve = { t: $('c-in').value, s: $('c-size').value, st: $('c-step').value, c: $('c-curve').value, b: $('c-base').value, l: $('c-lh').value, m: $('c-colmode').value, col: $('c-col').value }; pref(P);
+  }
+  ['c-in', 'c-size', 'c-step', 'c-curve', 'c-base', 'c-lh', 'c-colmode', 'c-col'].forEach(function (id) { $(id).addEventListener('input', drawCurve); $(id).addEventListener('change', drawCurve); });
+  $('c-curve').addEventListener('change', function () { if (Number(this.value) < 180) { this.value = 180; drawCurve(); toast('Angle curve needs to stay at 180 or higher'); } });
+
+  // ---------- start (restores what you had last time on this device) ----------
+  var P = pref();
+  if (P.studio) sIn.value = P.studio;
+  if (P.stops && P.stops.length >= 2) stops = P.stops;
+  if (P.gtext !== undefined) $('g-in').value = P.gtext;
+  if (P.curve) { var c = P.curve; $('c-in').value = c.t; $('c-size').value = c.s; $('c-step').value = c.st; $('c-curve').value = c.c; $('c-base').value = c.b; $('c-lh').value = c.l; $('c-colmode').value = c.m; $('c-col').value = c.col; }
+  drawStops(); drawStudio(); drawGradient(); drawCurve(); showTab();
+})();
+</script>
+</body>
+</html>
