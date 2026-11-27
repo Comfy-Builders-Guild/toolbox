@@ -82,7 +82,11 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
   // The "Earning Points Data" tab, published to the web as CSV
   var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ0pGSFpWaCp97TKZ8mh26bALm-CL-60fqg5eCPIbjc8WV_bH9tBm7IPzVKseOWDv0YXbnvum9RMtg/pub?gid=1188165432&single=true&output=csv';
   // Tabs on this page (A to Z) and which Section names from the sheet go in each
+  // The hidden "Bootcamp Data" tab, published to the web as CSV. Leave '' until it's published.
+  var BOOTCAMP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ0pGSFpWaCp97TKZ8mh26bALm-CL-60fqg5eCPIbjc8WV_bH9tBm7IPzVKseOWDv0YXbnvum9RMtg/pub?gid=532734193&single=true&output=csv';
+  var BOOTCAMP_INTRO = "Each week you'll add to or change the same house. This is about style, not function. You might not be able to get in through the front door, but it'd better look good.";
   var TABS = [
+    { id: 'bootcamp', label: 'Bootcamp', bootcamp: true, project: { type: 'Neighborhood (Bootcamp)', field: 'week' } },
     { id: 'activities', label: 'Builder Activities', sections: ['Builder Activities'],
       intro: ['One Builder Activity per week, and each activity only once per era. Each activity has its own points.'],
       strip: ['One Builder Activity per week, and each activity only once per era.'],
@@ -123,7 +127,19 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
     return rows;
   }
 
-  var ITEMS = [], tab = 'activities', openId = null;
+  var ITEMS = [], WEEKS = [], tab = 'activities', openId = null, bcOpened = false;
+
+  function loadWeeks(rows) {
+    var head = (rows[0] || []).map(function (h) { return norm(h).toLowerCase(); });
+    var c = function (n) { return head.indexOf(n); };
+    if (c('week') < 0 || c('status') < 0) return false;
+    WEEKS = rows.slice(1).filter(function (r) { return norm(r[c('week')]); }).map(function (r) {
+      var g = function (n) { return c(n) < 0 ? '' : String(r[c(n)] || '').trim(); };
+      return { id: 'w' + g('week'), week: g('week'), out: /^out$/i.test(g('status')), name: g('title'), opens: g('opens'), due: g('due'),
+        wisdom: g('builder wisdom'), reqs: g('requirements'), c1: g('command') };
+    }).sort(function (a, b) { return Number(a.week) - Number(b.week); });
+    return true;
+  }
 
   function load(rows) {
     var head = (rows[0] || []).map(function (h) { return norm(h).toLowerCase(); });
@@ -141,8 +157,8 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
     return true;
   }
 
-  function tabOf(id) { return TABS.filter(function (t) { return t.id === id; })[0] || TABS[0]; }
-  function itemsFor(t) { return ITEMS.filter(function (x) { return t.sections.indexOf(x.section) >= 0; }); }
+  function tabOf(id) { return TABS.filter(function (t) { return t.id === id; })[0] || TABS.filter(function (t) { return t.id === 'activities'; })[0]; }
+  function itemsFor(t) { if (t.bootcamp) return WEEKS.filter(function (w) { return w.out; }); return ITEMS.filter(function (x) { return t.sections.indexOf(x.section) >= 0; }); }
   function pts(p) {
     if (!p) return '';
     if (/^[\d.]+$/.test(p)) return p + (p === '1' ? ' point' : ' points');
@@ -183,9 +199,51 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
     }).join('');
   }
 
+  function reqHTML(text) {
+    var out = '', list = [], sub = null;
+    var flush = function () { if (list.length) { out += '<ul>' + list.map(function (l) { return '<li>' + esc(l.t) + (l.sub.length ? '<ul>' + l.sub.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</li>'; }).join('') + '</ul>'; list = []; } };
+    text.split('\n').forEach(function (l) {
+      if (/^\s{2,}-\s/.test(l) && list.length) list[list.length - 1].sub.push(l.replace(/^\s*-\s/, ''));
+      else if (/^-\s/.test(l)) list.push({ t: l.slice(2), sub: [] });
+      else if (l.trim()) { flush(); out += '<p>' + esc(l.trim()) + '</p>'; }
+    });
+    flush();
+    return out;
+  }
+
+  function renderBootcamp(t) {
+    var out = WEEKS.filter(function (w) { return w.out; }), coming = WEEKS.filter(function (w) { return !w.out; });
+    var latest = out.length ? out[out.length - 1].id : null;
+    if (!bcOpened && latest) { openId = latest; bcOpened = true; }
+    var intro = [BOOTCAMP_INTRO];
+    if (!WEEKS.length) intro.push('Bootcamp weeks show up here as they are given out.');
+    else if (!out.length) intro.push('Bootcamp starts ' + coming[0].opens + '. Each new week shows up here when it is given out.');
+    else if (coming.length) intro.push('Week ' + coming[0].week + ' opens ' + coming[0].opens + '.');
+    else intro.push('All ' + out.length + ' weeks are out. Finish strong!');
+    $('intro').hidden = false;
+    $('intro').innerHTML = intro.map(function (p, i) { return '<p' + (i ? ' style="font-weight:700"' : '') + '>' + esc(p) + '</p>'; }).join('');
+    var term = $('q').value.trim().toLowerCase();
+    var list = out.filter(function (w) { return !term || (w.name + ' ' + w.reqs + ' ' + w.wisdom).toLowerCase().indexOf(term) >= 0; });
+    if (!list.length) { $('cards').innerHTML = out.length ? '<p class="empty">Nothing matches that search.</p>' : ''; return; }
+    $('cards').innerHTML = list.map(function (w) {
+      var open = w.id === openId;
+      return '<article class="q' + (open ? ' open' : '') + '" data-id="' + w.id + '">' +
+        '<div class="hd"><div><p class="group">Week ' + esc(w.week) + (w.id === latest ? ' · this week' : '') + '</p><h3>' + esc(w.name) + '</h3></div></div>' +
+        (w.due ? '<p class="sum">Due ' + esc(w.due) + '</p>' : '') +
+        '<div class="acts"><button type="button" data-act="more" aria-expanded="' + open + '">' + (open ? 'Less' : 'Details') + '</button>' +
+        (isCmd(w.c1) ? '<button type="button" data-act="copy" data-c="1">Copy</button>' : '') +
+        '<button type="button" data-act="proj">Start project</button></div>' +
+        (open ? '<div class="more"><div class="desc">' + (w.wisdom ? '<h4>Builder Wisdom</h4><p><em>' + esc(w.wisdom) + '</em></p>' : '') +
+          '<h4>Requirements</h4>' + reqHTML(w.reqs) + '</div>' + cmdHTML(w.c1, 'Command to submit') +
+          (w.due ? '<p class="sum" style="margin:0">Full point until ' + esc(w.due) + ', half a point after.</p>' : '') + '</div>' : '') +
+        '</article>';
+    }).join('');
+  }
+
   function render() {
     var t = tabOf(tab);
     renderTabs();
+    if (t.bootcamp) { renderBootcamp(t); return; }
     var intro = (t.intro || []).slice();
     if (t.liftPara) {
       var src = itemsFor(t)[0];
@@ -216,7 +274,7 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
     }).join('');
   }
 
-  function find(id) { return ITEMS.filter(function (x) { return x.id === id; })[0]; }
+  function find(id) { return ITEMS.concat(WEEKS).filter(function (x) { return x.id === id; })[0]; }
 
   function startProject(x) {
     var t = tabOf(tab);
@@ -226,6 +284,14 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
     var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     var fields = {};
     if (pr.field === 'activity' || pr.field === 'quest') fields[pr.field] = x.name;
+    if (pr.field === 'week') {
+      fields.week = x.week;
+      var musts2 = x.reqs.split('\n').filter(function (l) { return /^\s*-\s/.test(l); }).map(function (l) { return (/^\s{2,}/.test(l) ? '  ' : '') + l.replace(/^\s*-\s/, ''); });
+      d.projects.push({ id: id, name: 'Bootcamp Week ' + x.week + ': ' + x.name, type: pr.type, fields: fields, created: Date.now(),
+        brief: { title: 'Bootcamp Week ' + x.week + ': ' + x.name, story: x.wisdom, style: '', musts: musts2 } });
+      if (store(KEY, JSON.stringify(d)) === null && !store(KEY)) { toast('Could not save. Is this a private window?'); return; }
+      store(KEY + '.sel', id); location.href = 'projects.html'; return;
+    }
     var paras = x.desc.split(/\n\s*\n/).filter(function (p) { return !t.liftPara || p.trim().indexOf(t.liftPara) !== 0; });
     var musts = [], story = [];
     paras.join('\n').split('\n').forEach(function (l) { l = l.trim(); if (!l) return; if (/^[•\-*]\s*/.test(l)) musts.push(l.replace(/^[•\-*]\s*/, '')); else if (!/^[^.]{2,30}:$/.test(l)) story.push(l); });
@@ -268,6 +334,14 @@ main.wrap { padding-block: 24px 24px; display: grid; gap: 20px; }
   }).catch(function () {
     $('status').textContent = 'Could not reach the tracker, showing the last saved copy.';
   });
+  var bc = null; try { bc = JSON.parse(store('tbBootcamp.cache') || 'null'); } catch (e) {}
+  if (bc && bc.rows) { loadWeeks(bc.rows); render(); }
+  if (BOOTCAMP_URL) fetch(BOOTCAMP_URL, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (txt) {
+    var rows = parseCSV(txt);
+    if (!loadWeeks(rows)) throw 0;
+    store('tbBootcamp.cache', JSON.stringify({ rows: rows, at: Date.now() }));
+    render();
+  }).catch(function () {});
 })();
 </script>
 </body>
