@@ -79,8 +79,7 @@ main.wrap { padding-block: 22px 32px; display: grid; grid-template-columns: minm
     <section class="card fields">
       <h2 style="margin:0">Use it</h2>
       <div class="btns">
-        <button type="button" class="primary" id="copy">Copy for Discord</button>
-        <button type="button" id="toproj">Start a project with this</button>
+        <button type="button" class="primary" id="toproj">Start a project with this</button>
       </div>
       <p class="small muted" style="margin:0">Starting a project adds it to your Projects page so you can time it.</p>
     </section>
@@ -209,7 +208,7 @@ main.wrap { padding-block: 22px 32px; display: grid; grid-template-columns: minm
       '<p class="kicker">Odin\'s Blueprint</p><h2 class="bt">' + esc(title()) + '</h2>' +
       '<p class="story">' + esc(story()) + '</p>' +
       '<div class="meta"><span class="chip type">' + esc(B.style) + '</span><span class="chip">' + esc(S.label) + '</span><span class="chip">' + esc(S.time.split(' (')[0]) + '</span></div>' +
-      '<h3>Must-haves</h3><ul>' + musts().map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>' +
+      '<h3>Ideas for things you could add</h3><ul>' + musts().map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>' +
       '<h3>Time</h3><p style="margin:0">' + esc(S.time) + '</p>' +
       '<p class="small muted" style="margin:16px 0 0">Treat this as a starting point. Change anything you like and make it your own.</p></div>';
     $('parts').innerHTML = PARTS.map(function (p) {
@@ -218,9 +217,9 @@ main.wrap { padding-block: 22px 32px; display: grid; grid-template-columns: minm
         '<button type="button" data-lock="' + p.k + '" aria-pressed="' + !!locks[p.k] + '" aria-label="Keep ' + esc(p.label) + '">' + (locks[p.k] ? '🔒' : '🔓') + '</button>' +
         '<button type="button" data-one="' + p.k + '" aria-label="Roll ' + esc(p.label) + ' again">🎲</button></div>';
     }).join('') +
-      '<div class="part"><label>Must-haves</label><span class="small muted">' + S.musts + ' for a ' + esc(S.label.toLowerCase()) + '</span>' +
-      '<button type="button" data-lock="musts" aria-pressed="' + !!locks.musts + '" aria-label="Keep must-haves">' + (locks.musts ? '🔒' : '🔓') + '</button>' +
-      '<button type="button" data-one="musts" aria-label="Roll must-haves again">🎲</button></div>';
+      '<div class="part"><label>Ideas</label><span class="small muted">' + S.musts + ' for a ' + esc(S.label.toLowerCase()) + '</span>' +
+      '<button type="button" data-lock="musts" aria-pressed="' + !!locks.musts + '" aria-label="Keep ideas">' + (locks.musts ? '🔒' : '🔓') + '</button>' +
+      '<button type="button" data-one="musts" aria-label="Roll ideas again">🎲</button></div>';
     document.querySelectorAll('#sizes button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.size === size ? 'true' : 'false'); });
   }
 
@@ -231,12 +230,6 @@ main.wrap { padding-block: 22px 32px; display: grid; grid-template-columns: minm
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.lock) { locks[b.dataset.lock] = !locks[b.dataset.lock]; store('locks', locks); draw(); }
     if (b.dataset.one) roll(b.dataset.one);
-  });
-  $('copy').addEventListener('click', function () {
-    var S = SIZES[size];
-    var text = '## Odin\'s Blueprint: ' + title() + '\n' + story() + '\n### Style\n' + B.style + '\n### Must-haves\n' +
-      musts().map(function (m) { return '- ' + m; }).join('\n') + '\n### Time\n' + S.label + ', ' + S.time + '\n-# Rolled on the Builders Toolbox';
-    copy(text, 'Copied. Paste it in Discord.');
   });
   $('toproj').addEventListener('click', function () {
     var d; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { d = null; }
