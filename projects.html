@@ -92,7 +92,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     <a href="index.html">Home</a>
     <a href="projects.html" aria-current="page">Projects</a>
     <a href="signs.html">Signs</a>
-    <a href="index.html#blueprints">Odin's Blueprints</a>
+    <a href="blueprints.html">Odin's Blueprints</a>
     <a href="index.html#links">Links &amp; Guides</a>
   </div></nav>
   <div class="stripe"></div>
@@ -552,6 +552,10 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
       html += '<div class="card wide"><div class="head"><div style="min-width:0"><h2 class="pname">' + esc(p.name) + '</h2><div class="chips">' + chips + '</div></div>' +
         '<div class="btns"><button type="button" class="ghost" data-act="edit">Edit</button><button type="button" class="ghost danger" data-act="del">Delete</button></div></div>' +
         (confirmDel ? '<div class="confirm" style="margin-top:12px">Delete ' + esc(p.name) + ' and all its time? <button type="button" class="danger" data-act="del-yes">Delete</button><button type="button" data-act="del-no">Keep</button></div>' : '') + '</div>';
+      // blueprint brief (projects started from Odin's Blueprints)
+      if (p.brief) html += '<section class="card wide"><details><summary>Odin\'s Blueprint for this project</summary><p style="margin:10px 0">' + esc(p.brief.story) + '</p>' +
+        '<p class="small" style="margin:0 0 6px"><span class="chip type">' + esc(p.brief.style) + '</span></p><ul style="margin:0;padding-left:20px">' +
+        (p.brief.musts || []).map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></details></section>';
       // timer
       html += '<section class="card"><h2>Timer</h2>' +
         '<div id="t-clock" class="clock' + (run ? '' : ' idle') + '">' + (run ? hms(Date.now() - r.start) : '0:00:00') + '</div>' +

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Odin's Blueprints · Builders Toolbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="timer-badge.js" defer></script>
+<style>
+/* Layout: the blueprint card (the brief) on the left, the parts you can lock and reroll on the right; stacks on phones */
+main.wrap { padding-block: 22px 32px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { main.wrap { grid-template-columns: minmax(0, 1fr); } }
+.sizes { display: flex; flex-wrap: wrap; gap: 8px; }
+.sizes button { border-radius: 999px; }
+.sizes button[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+.roll { width: 100%; font-size: 18px; padding: 14px; border-radius: 10px; letter-spacing: .04em; background: var(--band); border-color: var(--band); color: var(--band-ink); }
+.roll:hover { border-color: var(--teal); }
+.parts { display: grid; gap: 10px; }
+.part { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+@media (max-width: 480px) { .part { grid-template-columns: minmax(0, 1fr) auto auto; } .part label { grid-column: 1 / -1; margin: 0; } }
+.part label { margin: 0; }
+.part select { padding: 8px 10px; }
+.part button { padding: 7px 10px; font-size: 13px; }
+.part button[aria-pressed="true"] { background: color-mix(in srgb, var(--violet) 22%, var(--card)); border-color: var(--violet); }
+.brief { position: relative; overflow: hidden; }
+.brief::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--frost); }
+.brief .kicker { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); margin: 4px 0 6px; }
+.brief h2.bt { margin: 0 0 10px; font-size: clamp(22px, 3.4vw, 30px); letter-spacing: 0; text-transform: none; color: var(--ink); line-height: 1.2; }
+.brief .story { font-size: 16px; line-height: 1.65; margin: 0 0 16px; max-width: 62ch; }
+.brief h3 { margin: 16px 0 6px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+.brief ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.fade { animation: fadein .35s ease; }
+@keyframes fadein { from { opacity: .2; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Builders Toolbox</p>
+      <h1>ODIN'S BLUEPRINTS</h1>
+    </div>
+    <p class="tagline">Not sure what to build? Roll a blueprint. Keep the parts you like and roll the rest again.</p>
+  </div>
+  <nav class="tabs" aria-label="Toolbox"><div class="wrap">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="signs.html">Signs</a>
+    <a href="blueprints.html" aria-current="page">Odin's Blueprints</a>
+    <a href="index.html#links">Links &amp; Guides</a>
+  </div></nav>
+  <div class="stripe"></div>
+</header>
+
+<main class="wrap">
+  <article class="card brief" id="brief" aria-live="polite"></article>
+
+  <div class="fields">
+    <section class="card fields">
+      <h2 style="margin:0">How big?</h2>
+      <div class="sizes" id="sizes" role="group" aria-label="Build size">
+        <button type="button" data-size="quick">Quick build</button>
+        <button type="button" data-size="weekend">Weekend project</button>
+        <button type="button" data-size="showcase">Showcase</button>
+      </div>
+      <button type="button" class="roll" id="roll">🎲 ROLL A BLUEPRINT</button>
+    </section>
+    <section class="card fields">
+      <h2 style="margin:0">The parts</h2>
+      <p class="small muted" style="margin:0">Pick any part yourself, or tap 🔒 to keep it when you roll again.</p>
+      <div class="parts" id="parts"></div>
+    </section>
+    <section class="card fields">
+      <h2 style="margin:0">Use it</h2>
+      <div class="btns">
+        <button type="button" class="primary" id="copy">Copy for Discord</button>
+        <button type="button" id="toproj">Start a project with this</button>
+      </div>
+      <p class="small muted" style="margin:0">Starting a project adds it to your Projects page so you can time it.</p>
+    </section>
+  </div>
+</main>
+<footer class="wrap site">More than 100 parts mix together into millions of blueprints, so you'll rarely see the same one twice.</footer>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(function () {
+  // ================= EDIT THIS PART =================
+  // Biomes: [name, where it sits in the story]
+  var BIOMES = [
+    ['Ashlands', 'on the scorched edge of the Ashlands'], ['Black Forest', 'deep in the Black Forest'],
+    ['Deep North', 'out in the frozen Deep North'], ['Meadows', 'in the quiet Meadows'],
+    ['Mistlands', 'in the fog of the Mistlands'], ['Mountains', 'high in the Mountains'],
+    ['Ocean', 'on a rocky spot out in the Ocean'], ['Plains', 'out on the open Plains'], ['Swamp', 'in the murky Swamp']
+  ];
+  // Buildings: [name, with "a/an" for the story]
+  var BUILDINGS = [
+    ['Apothecary', 'an apothecary'], ['Archery range', 'an archery range'], ['Bakery', 'a bakery'], ['Bathhouse', 'a bathhouse'],
+    ['Bell tower', 'a bell tower'], ['Boathouse', 'a boathouse'], ['Brewery', 'a brewery'], ['Carpenter\'s workshop', 'a carpenter\'s workshop'],
+    ['Cartographer\'s study', 'a cartographer\'s study'], ['Fishing shack', 'a fishing shack'], ['Forge', 'a forge'], ['Gatehouse', 'a gatehouse'],
+    ['Granary', 'a granary'], ['Guard post', 'a guard post'], ['Healer\'s hut', 'a healer\'s hut'], ['Hunting lodge', 'a hunting lodge'],
+    ['Inn', 'an inn'], ['Library', 'a library'], ['Lighthouse', 'a lighthouse'], ['Market row', 'a row of market stalls'],
+    ['Mead hall', 'a mead hall'], ['Mill', 'a mill'], ['Observatory', 'an observatory'], ['Pottery workshop', 'a pottery workshop'],
+    ['Shipwright\'s yard', 'a shipwright\'s yard'], ['Shrine to Odin', 'a shrine to Odin'], ['Stable', 'a stable'], ['Tailor\'s shop', 'a tailor\'s shop'],
+    ['Tavern', 'a tavern'], ['Trading post', 'a trading post'], ['Treehouse', 'a treehouse'], ['Watchtower', 'a watchtower'], ['Weaver\'s cottage', 'a weaver\'s cottage']
+  ];
+  // Who lives there: [name, the rest of the sentence]
+  var WHO = [
+    ['A bard', 'who needs a stage, an audience and a lot of mead'],
+    ['A beekeeper', 'who talks to the bees more than to the neighbors'],
+    ['A brewer', 'who is still chasing the perfect mead'],
+    ['A clumsy apprentice builder', 'who is learning everything the hard way'],
+    ['A collector of trophies', 'who has a story for every single one on the wall'],
+    ['A cook', 'who feeds half the village and expects compliments'],
+    ['A dvergr trader', 'who wandered far from home and decided to stay a while'],
+    ['A family of farmers', 'who just made it through their first hard winter'],
+    ['A grumpy blacksmith', 'who hates visitors but loves showing off their work'],
+    ['A healer', 'who patches up every Viking who limps through the door'],
+    ['A hermit mapmaker', 'who trusts maps more than people'],
+    ['A jarl with deep pockets', 'who wants everyone to know just how deep'],
+    ['A night watch captain', 'who never quite sleeps'],
+    ['A pair of feuding siblings', 'who share one roof and agree on nothing'],
+    ['A ranger', 'who spends more nights in the woods than in a bed'],
+    ['A retired berserker', 'who traded the axe for a garden and wants somewhere quiet to grow old'],
+    ['A sailor home from a long voyage', 'who brought back far too many souvenirs'],
+    ['A scholar of runestones', 'who copies down every rune they can find'],
+    ['A stargazer', 'who stays up every clear night'],
+    ['A tailor', 'who dyes everything in bright colors'],
+    ['A traveling merchant', 'who is tired of the road and wants to settle for a season'],
+    ['A wolf tamer', 'whose pack sleeps by the fire'],
+    ['An old fisherman', 'who swears the best catch is always just past the next wave'],
+    ['Two best friends', 'who split everything right down the middle'],
+    ['A young shipwright', 'who dreams bigger than their skills (for now)']
+  ];
+  var STYLES = ['Classic Viking', 'Cozy cottage', 'Dvergr inspired', 'Elegant and grand', 'Fortified', 'Overgrown and abandoned',
+    'Rustic and patched together', 'Stone and marble', 'Storybook', 'Weathered and old'];
+  var TWISTS = [
+    'built into the side of a cliff', 'half sunk into a hillside', 'raised up on stilts', 'on a tiny island of its own', 'wrapped around a huge tree',
+    'built across a stream', 'on top of an old ruin', 'mostly underground', 'added onto again and again over the years',
+    'with a hidden room nobody is supposed to find', 'with a garden on the roof', 'that you can only reach by a bridge',
+    'squeezed between two big rocks', 'built in a circle with no straight walls', 'lit only by candles and firelight',
+    'with one wall left wide open to the view', 'with a lookout higher than anything nearby', 'still being repaired after a troll attack',
+    'decorated for a festival', 'right at the water\'s edge'
+  ];
+  var MUST = [
+    'A fire with somewhere for the smoke to go', 'At least one bed', 'A place to sit down and eat', 'A work area that fits the building',
+    'Storage that looks used (barrels, crates, shelves)', 'Lighting that looks good after dark', 'A path leading up to the door',
+    'A garden or planters', 'Something hanging from the ceiling', 'A banner or flag', 'Something on display on an item stand',
+    'A window with a view worth looking at', 'At least two floors', 'A balcony or porch', 'A fence or wall around part of it',
+    'A spot to park a boat or cart', 'A sign of the owner\'s favorite hobby', 'Something broken or unfinished', 'A secret or hidden detail',
+    'A rug or two', 'A roof with more than one level', 'A floor plan that isn\'t a plain rectangle', 'At least three different building materials',
+    'A trophy on the wall', 'A cooking station or cauldron', 'A place for visitors to wait'
+  ];
+  var SIZES = {
+    quick: { label: 'Quick build', time: '1 to 2 hours', musts: 2 },
+    weekend: { label: 'Weekend project', time: '3 to 5 hours', musts: 3 },
+    showcase: { label: 'Showcase', time: '5 hours or more (big enough to count as a Showcase Build)', musts: 4 }
+  };
+  var VERBS = ['They\'ve set up', 'They\'re putting up', 'They\'ve claimed', 'They\'ve started on'];
+  var KEY = 'buildersBuildTimer.v1';   // the Projects page's saved data (for "Start a project with this")
+  // ==================================================
+
+  var $ = function (id) { return document.getElementById(id); };
+  var az = function (a, b) { return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }); };
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
+  function pickN(list, n) { var a = list.slice(), out = []; while (out.length < n && a.length) out.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]); return out; }
+  var tt; function toast(m) { var el = $('toast'); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
+  function copy(text, done) {
+    var fb = function () { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); toast(ok ? done : 'Select the text and copy it by hand.'); };
+    try { navigator.clipboard.writeText(text).then(function () { toast(done); }, fb); } catch (e) { fb(); }
+  }
+  function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('buildersToolbox.blueprints') || '{}')[k]; var o = JSON.parse(localStorage.getItem('buildersToolbox.blueprints') || '{}'); o[k] = v; localStorage.setItem('buildersToolbox.blueprints', JSON.stringify(o)); } catch (e) {} return undefined; }
+
+  // The parts (each can be picked by hand, locked, or rolled)
+  var PARTS = [
+    { k: 'biome', label: 'Biome', list: BIOMES.map(function (b) { return b[0]; }) },
+    { k: 'building', label: 'Building', list: BUILDINGS.map(function (b) { return b[0]; }) },
+    { k: 'who', label: 'Who lives there', list: WHO.map(function (w) { return w[0]; }) },
+    { k: 'style', label: 'Style', list: STYLES },
+    { k: 'twist', label: 'Twist', list: TWISTS }
+  ];
+  PARTS.forEach(function (p) { p.list = p.list.slice().sort(az); });   // dropdowns show A to Z
+  var B = store('bp') || {}, locks = store('locks') || {}, size = store('size') || 'weekend';
+
+  function roll(only) {
+    PARTS.forEach(function (p) { if ((only ? p.k === only : !locks[p.k]) || !B[p.k]) B[p.k] = pick(p.list); });
+    if (!only || only === 'musts' || !B.musts) { if (!locks.musts || !B.musts || only === 'musts') B.musts = pickN(MUST, 6); }
+    B.verb = only ? (B.verb || pick(VERBS)) : pick(VERBS);
+    store('bp', B); draw(true);
+  }
+  function find(list, name) { return list.find(function (x) { return x[0] === name; }) || [name, name]; }
+  function title() { return B.biome + ' ' + B.building.toLowerCase(); }
+  function story() {
+    var w = find(WHO, B.who), bd = find(BUILDINGS, B.building), bi = find(BIOMES, B.biome);
+    return w[0] + ' ' + w[1] + '. ' + B.verb + ' ' + bd[1] + ' ' + bi[1] + ', ' + B.twist + '.';
+  }
+  function musts() { return (B.musts || []).slice(0, SIZES[size].musts); }
+
+  function draw(anim) {
+    var S = SIZES[size];
+    $('brief').innerHTML = '<div' + (anim ? ' class="fade"' : '') + '>' +
+      '<p class="kicker">Odin\'s Blueprint</p><h2 class="bt">' + esc(title()) + '</h2>' +
+      '<p class="story">' + esc(story()) + '</p>' +
+      '<div class="meta"><span class="chip type">' + esc(B.style) + '</span><span class="chip">' + esc(S.label) + '</span><span class="chip">' + esc(S.time.split(' (')[0]) + '</span></div>' +
+      '<h3>Must-haves</h3><ul>' + musts().map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>' +
+      '<h3>Time</h3><p style="margin:0">' + esc(S.time) + '</p>' +
+      '<p class="small muted" style="margin:16px 0 0">Treat this as a starting point. Change anything you like and make it your own.</p></div>';
+    $('parts').innerHTML = PARTS.map(function (p) {
+      return '<div class="part"><label for="p-' + p.k + '">' + esc(p.label) + '</label><select id="p-' + p.k + '" data-k="' + p.k + '">' +
+        p.list.map(function (o) { return '<option' + (o === B[p.k] ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' +
+        '<button type="button" data-lock="' + p.k + '" aria-pressed="' + !!locks[p.k] + '" aria-label="Keep ' + esc(p.label) + '">' + (locks[p.k] ? '🔒' : '🔓') + '</button>' +
+        '<button type="button" data-one="' + p.k + '" aria-label="Roll ' + esc(p.label) + ' again">🎲</button></div>';
+    }).join('') +
+      '<div class="part"><label>Must-haves</label><span class="small muted">' + S.musts + ' for a ' + esc(S.label.toLowerCase()) + '</span>' +
+      '<button type="button" data-lock="musts" aria-pressed="' + !!locks.musts + '" aria-label="Keep must-haves">' + (locks.musts ? '🔒' : '🔓') + '</button>' +
+      '<button type="button" data-one="musts" aria-label="Roll must-haves again">🎲</button></div>';
+    document.querySelectorAll('#sizes button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.size === size ? 'true' : 'false'); });
+  }
+
+  $('roll').addEventListener('click', function () { roll(); });
+  $('sizes').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; size = b.dataset.size; store('size', size); draw(true); });
+  $('parts').addEventListener('change', function (e) { var k = e.target.dataset.k; if (!k) return; B[k] = e.target.value; store('bp', B); draw(true); });
+  $('parts').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.lock) { locks[b.dataset.lock] = !locks[b.dataset.lock]; store('locks', locks); draw(); }
+    if (b.dataset.one) roll(b.dataset.one);
+  });
+  $('copy').addEventListener('click', function () {
+    var S = SIZES[size];
+    var text = '## Odin\'s Blueprint: ' + title() + '\n' + story() + '\n### Style\n' + B.style + '\n### Must-haves\n' +
+      musts().map(function (m) { return '- ' + m; }).join('\n') + '\n### Time\n' + S.label + ', ' + S.time + '\n-# Rolled on the Builders Toolbox';
+    copy(text, 'Copied. Paste it in Discord.');
+  });
+  $('toproj').addEventListener('click', function () {
+    var d; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { d = null; }
+    d = d && d.projects ? d : { projects: [], sessions: [], running: null };
+    var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    d.projects.push({ id: id, name: title().charAt(0).toUpperCase() + title().slice(1), type: size === 'showcase' ? 'Showcase Build' : 'Other', fields: {}, created: Date.now(),
+      brief: { story: story(), style: B.style, musts: musts() } });
+    try { localStorage.setItem(KEY, JSON.stringify(d)); localStorage.setItem(KEY + '.sel', id); } catch (e) { toast('Could not save. Is this a private window?'); return; }
+    location.href = 'projects.html';
+  });
+
+  if (!B.biome) roll(); else draw();
+})();
+</script>
+</body>
+</html>
