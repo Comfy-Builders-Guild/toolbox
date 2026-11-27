@@ -149,10 +149,21 @@ svg.curve { width: 100%; height: auto; display: block; }
       </div>
       <div class="bar" id="c-colbar" hidden><input id="c-col" type="color" value="#45eefc" aria-label="Color"><span class="small muted">The gradient option uses the colors from the Gradient tab.</span></div>
       <p class="small muted" style="margin:0">Keep the angle curve at 180 or higher. Odd and even letter counts are centered for you.</p>
+      <details open><summary>How to place it in game</summary>
+        <ol class="small" style="margin:10px 0 0;padding-left:20px;display:grid;gap:6px">
+          <li>You need the <b>ComfySigns</b> mod. Curved text is far over the 50 character vanilla limit.</li>
+          <li>Press <b>Copy sign text</b>, place a sign, and paste the text into it.</li>
+          <li>The letters will stack down one side of the sign. That's expected.</li>
+          <li>Turn the sign on its side, a quarter turn (90°), so the stack of letters runs left to right. With <b>ComfyGizmo</b>, use its roll rotation to tip the sign over. The letters stand up and form an arch.</li>
+          <li>If the arch is upside down, turn the sign the other way.</li>
+          <li>To tweak it: <b>Angle curve</b> and <b>Degrees per letter</b> change how curved it is, <b>Line height</b> changes the space between letters, and <b>Starting indent</b> slides the whole arch along the sign.</li>
+        </ol>
+      </details>
     </div>
     <div class="card fields">
       <h2 style="margin:0">Preview</h2>
       <div class="sign" style="padding:8px"><svg class="curve" id="c-svg" role="img" aria-label="Rough preview of the curved letters"></svg></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:0"><input id="c-turn" type="checkbox" checked style="width:auto"> Show it turned on its side (how it looks once placed)</label>
       <p class="small muted" style="margin:0">A rough look at where each letter lands. Check it on a sign in game.</p>
       <div class="count" id="c-count"></div>
       <div class="out" id="c-out"></div>
@@ -338,19 +349,22 @@ svg.curve { width: 100%; height: auto; display: block; }
     // rough picture: line i is lower down by the line height, pushed right by its indent, letter turned by its rotation
     var used = rows.filter(function (r) { return r.letter !== null; });
     var xs = used.map(function (r) { return r.indent; }), minX = Math.min.apply(null, xs.concat([0])) - 30, maxX = Math.max.apply(null, xs.concat([0])) + 30;
+    var turn = $('c-turn').checked;
     var H = (rows.length + 2) * lh + 30, W = Math.max(120, maxX - minX);
-    $('c-svg').setAttribute('viewBox', minX + ' -10 ' + W + ' ' + H);
+    // turned on its side: each line becomes a column (left to right) and a bigger indent sits higher up
+    if (turn) $('c-svg').setAttribute('viewBox', '-10 ' + (-maxX) + ' ' + H + ' ' + W);
+    else $('c-svg').setAttribute('viewBox', minX + ' -10 ' + W + ' ' + H);
     $('c-svg').innerHTML = rows.map(function (r, i) {
       if (r.letter === null || r.letter === ' ') return '';
-      var x = r.indent, y = (i + 1) * lh;
-      return '<text x="' + x + '" y="' + y + '" font-size="' + (r.size * 0.9) + '" fill="' + (r.color || '#ffffff') + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(' + (-r.rot) + ' ' + x + ' ' + y + ')" style="font-family:Georgia,serif;font-weight:700">' + esc(r.letter) + '</text>';
+      var x = turn ? (i + 1) * lh : r.indent, y = turn ? -r.indent : (i + 1) * lh;
+      return '<text x="' + x + '" y="' + y + '" font-size="' + (r.size * 0.9) + '" fill="' + (r.color || '#ffffff') + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(' + (-r.rot - (turn ? 90 : 0)) + ' ' + x + ' ' + y + ')" style="font-family:Georgia,serif;font-weight:700">' + esc(r.letter) + '</text>';
     }).join('');
     $('c-tbl').innerHTML = '<tr><th>Letter</th><th>Degrees</th><th>Indent</th><th>Rotate</th></tr>' + used.map(function (r) {
       return '<tr><td>' + (r.letter === ' ' ? '(space)' : esc(r.letter)) + '</td><td>' + r.deg + '</td><td>' + r.indent + '</td><td>' + r.rot + '</td></tr>';
     }).join('');
     var P = pref(); P.curve = { t: $('c-in').value, s: $('c-size').value, st: $('c-step').value, c: $('c-curve').value, b: $('c-base').value, l: $('c-lh').value, m: $('c-colmode').value, col: $('c-col').value }; pref(P);
   }
-  ['c-in', 'c-size', 'c-step', 'c-curve', 'c-base', 'c-lh', 'c-colmode', 'c-col'].forEach(function (id) { $(id).addEventListener('input', drawCurve); $(id).addEventListener('change', drawCurve); });
+  ['c-in', 'c-size', 'c-step', 'c-curve', 'c-base', 'c-lh', 'c-colmode', 'c-col', 'c-turn'].forEach(function (id) { $(id).addEventListener('input', drawCurve); $(id).addEventListener('change', drawCurve); });
   $('c-curve').addEventListener('change', function () { if (Number(this.value) < 180) { this.value = 180; drawCurve(); toast('Angle curve needs to stay at 180 or higher'); } });
 
   // ---------- start (restores what you had last time on this device) ----------
