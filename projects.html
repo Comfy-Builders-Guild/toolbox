@@ -77,6 +77,10 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
 .empty strong { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
 .hist-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: 14px; padding: 8px 0; border-top: 1px solid var(--line); }
 .hist-row:first-child { border-top: 0; }
+.sub-proj { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); }
+.sub-proj:first-child { border-top: 0; padding-top: 0; }
+.sub-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--soft); padding: 0 4px; }
+.sub-row span:first-child { flex: 1; }
 </style>
 <script data-goatcounter="https://comfy-builders-guild.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -104,14 +108,14 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
   <aside class="col">
     <section class="card o1" aria-labelledby="list-h">
       <div class="head" style="margin-bottom:12px">
-        <h2 id="list-h" style="margin:0">Your projects</h2>
+        <h2 id="list-h" style="margin:0">Active projects</h2>
         <button id="p-new" class="primary" type="button">+ New</button>
       </div>
       <div id="p-list" class="plist"></div>
     </section>
     <section class="card o3" aria-labelledby="h-h">
       <details id="hist">
-        <summary id="h-h">Submitted</summary>
+        <summary id="h-h">Submitted projects</summary>
         <div id="h-list" style="margin-top:10px"></div>
       </details>
     </section>
@@ -359,7 +363,7 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     if (act === 'start') start(p.id);
     else if (act === 'stop') stop();
     else if (act === 'copy') { var c = command(p); copy(c.text, 'Command copied. Paste it in Discord and add your pictures.'); }
-    else if (act === 'done') { var list = open(p.id), now = Date.now(); list.forEach(function (s) { s.submittedAt = now; }); save(); render(); toast('Marked ' + p.name + ' submitted (' + hm(sum(list)) + ').'); }
+    else if (act === 'done') { var list = open(p.id), now = Date.now(); list.forEach(function (s) { s.submittedAt = now; }); save(); render(); toast('Submitted ' + hm(sum(list)) + '. ' + p.name + ' moved to Submitted projects.'); }
     else if (act === 'edit') openForm(p);
     else if (act === 'del') { confirmDel = true; render(); }
     else if (act === 'del-no') { confirmDel = false; render(); }
@@ -384,10 +388,16 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     if (b.dataset.act === 'stop') stop(); else { sel = S.running.pid; render(); }
   });
   $('h-list').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b || b.dataset.act !== 'undo') return;
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.classList.contains('pitem')) {
+      sel = b.dataset.id; pref('sel', sel); confirmDel = false; confirmSess = null; closeForm(); render();
+      if (window.innerWidth < 860) $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (b.dataset.act !== 'undo') return;
     var at = Number(b.dataset.at);
     S.sessions.forEach(function (s) { if (s.pid === b.dataset.id && s.submittedAt === at) s.submittedAt = null; });
-    save(); render(); toast('Moved back to Ready to submit');
+    save(); render(); toast('Moved back to Active projects');
   });
 
   // ---------- backup ----------
@@ -520,16 +530,23 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
     var last = {}; S.sessions.forEach(function (s) { last[s.pid] = Math.max(last[s.pid] || 0, s.end); });
     var ordered = S.projects.slice().sort(function (a, b) { return az(a.name, b.name); });
     var r = S.running && proj(S.running.pid) ? S.running : null;
+    // Submitted = has time logged, all of it submitted, and the timer isn't on it. Everything else is active.
+    var isSubmitted = function (p) {
+      var all = S.sessions.filter(function (x) { return x.pid === p.id; });
+      return all.length > 0 && all.every(function (x) { return x.submittedAt; }) && !(r && r.pid === p.id);
+    };
+    var active = ordered.filter(function (p) { return !isSubmitted(p); }), done = ordered.filter(isSubmitted);
     if (!r && S.running) S.running = null;
     if (!sel || !proj(sel)) { var saved = pref('sel'); sel = (r && r.pid) || (saved && proj(saved) ? saved : (ordered[0] && ordered[0].id)) || null; }
 
     // list
-    $('p-list').innerHTML = ordered.length ? ordered.map(function (p) {
+    $('p-list').innerHTML = active.length ? active.map(function (p) {
       var mins = sum(open(p.id)), run = r && r.pid === p.id;
       return '<button type="button" class="pitem" data-id="' + p.id + '" aria-current="' + (p.id === sel) + '">' +
         '<span class="nm">' + (run ? '<span class="pulse" aria-hidden="true"></span>' : '') + esc(p.name) + '</span>' +
         '<span class="hr">' + (mins ? hrs(mins) + ' h' : '') + '</span><span class="ty">' + esc(p.type) + '</span></button>';
-    }).join('') : '<p class="small muted" style="margin:0">No projects yet.</p><div class="btns" style="margin-top:10px"><button type="button" data-act="example">Show me an example</button></div>';
+    }).join('') : ordered.length ? '<p class="small muted" style="margin:0">Nothing active. Start a new one, or open one under Submitted projects.</p>'
+      : '<p class="small muted" style="margin:0">No projects yet.</p><div class="btns" style="margin-top:10px"><button type="button" data-act="example">Show me an example</button></div>';
 
     // running bar (when the timer is on a project you're not looking at)
     if (r && r.pid !== sel) {
@@ -601,16 +618,20 @@ main.wrap { padding-block: 24px 32px; display: grid; grid-template-columns: minm
       drawPieces(p);
     }
 
-    // submitted history
+    // submitted projects (collapsed box): each project, then each time it was submitted
     var groups = {};
     S.sessions.forEach(function (s) { if (!s.submittedAt) return; var k = s.pid + '|' + s.submittedAt; (groups[k] = groups[k] || { pid: s.pid, at: s.submittedAt, mins: 0 }).mins += s.mins; });
-    var hist = Object.keys(groups).map(function (k) { return groups[k]; }).filter(function (g) { return proj(g.pid); }).sort(function (a, b) { return a.at - b.at; });
-    $('h-h').textContent = 'Submitted (' + hist.length + ')';
-    $('h-list').innerHTML = hist.length ? hist.map(function (g) {
-      return '<div class="hist-row"><span><b>' + esc(proj(g.pid).name) + '</b><br><span class="muted small">' + esc(day(g.at)) + '</span></span>' +
-        '<span style="font-family:var(--f-mono)">' + hrs(g.mins) + ' h</span>' +
-        '<button type="button" class="link" data-act="undo" data-id="' + g.pid + '" data-at="' + g.at + '">Undo</button></div>';
-    }).join('') : '<p class="small muted" style="margin:0">Nothing submitted yet.</p>';
+    var subsOf = function (pid) { return Object.keys(groups).map(function (k) { return groups[k]; }).filter(function (g) { return g.pid === pid; }).sort(function (a, b) { return a.at - b.at; }); };
+    $('h-h').textContent = 'Submitted projects (' + done.length + ')';
+    $('h-list').innerHTML = done.length ? done.map(function (p) {
+      var subs = subsOf(p.id), tot = subs.reduce(function (n, g) { return n + g.mins; }, 0);
+      return '<div class="sub-proj"><button type="button" class="pitem" data-id="' + p.id + '" aria-current="' + (p.id === sel) + '">' +
+        '<span class="nm">' + esc(p.name) + '</span><span class="hr">' + hrs(tot) + ' h</span><span class="ty">' + esc(p.type) + '</span></button>' +
+        subs.map(function (g) {
+          return '<div class="sub-row"><span>Submitted ' + esc(day(g.at)) + '</span><span style="font-family:var(--f-mono)">' + hrs(g.mins) + ' h</span>' +
+            '<button type="button" class="link" data-act="undo" data-id="' + g.pid + '" data-at="' + g.at + '">Undo</button></div>';
+        }).join('') + '</div>';
+    }).join('') : '<p class="small muted" style="margin:0">Nothing submitted yet. Projects move here when you click "I submitted this."</p>';
     tick();
   }
   // If the timer is stopped or changed in another tab (like the floating timer on another toolbox page), pick that up here
